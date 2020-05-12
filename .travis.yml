@@ -38,6 +38,11 @@ jobs:
         - sudo apt-get -y install libsecp256k1-0
         - pip install .[tests]
         - pip install electrumx
+        # Install gojq for JSON parsing
+        - gimme 1.13
+        - source ~/.gimme/envs/go1.13.env
+        - GO111MODULE=on go get github.com/itchyny/gojq/cmd/gojq
+        - export PATH="${PATH}:$(go env GOPATH)/bin"
       before_script:
           - electrum_nmc/electrum/tests/regtest/start_bitcoind.sh
           - electrum_nmc/electrum/tests/regtest/start_electrumx.sh
