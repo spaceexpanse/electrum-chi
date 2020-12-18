@@ -74,7 +74,8 @@ jobs:
         - ls -la bin
         - if [ $(ls bin | grep -c Electrum-*) -eq 0 ]; then exit 1; fi
       after_success: true
-    - name: "MacOS build"
+    - if: false
+      name: "MacOS build"
       os: osx
       language: c
       env:
