@@ -55,8 +55,7 @@ from electrum.bitcoin import COIN, is_address
 from electrum.plugin import run_hook, BasePlugin
 from electrum.i18n import _
 from electrum.names import format_name_identifier, get_wallet_name_count, name_new_mature_in
-from electrum.util import (format_time, format_satoshis, format_fee_satoshis,
-                           format_satoshis_plain,
+from electrum.util import (format_time,
                            UserCancelled, profiler,
                            bh2u, bfh, InvalidPassword,
                            UserFacingException,
@@ -160,6 +159,7 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, Logger):
     alias_received_signal = pyqtSignal()
     computing_privkeys_signal = pyqtSignal()
     show_privkeys_signal = pyqtSignal()
+    show_error_signal = pyqtSignal(str)
 
     def __init__(self, gui_object: 'ElectrumGui', wallet: Abstract_Wallet):
         QMainWindow.__init__(self)
@@ -256,6 +256,7 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, Logger):
 
         self.payment_request_ok_signal.connect(self.payment_request_ok)
         self.payment_request_error_signal.connect(self.payment_request_error)
+        self.show_error_signal.connect(self.show_error)
         self.history_list.setFocus(True)
 
         # network callbacks
@@ -304,6 +305,18 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, Logger):
     def setup_exception_hook(self):
         Exception_Hook.maybe_setup(config=self.config,
                                    wallet=self.wallet)
+
+    def run_coroutine_from_thread(self, coro, on_result=None):
+        def task():
+            try:
+                f = asyncio.run_coroutine_threadsafe(coro, self.network.asyncio_loop)
+                r = f.result()
+                if on_result:
+                    on_result(r)
+            except Exception as e:
+                self.logger.exception("exception in coro scheduled via window.wallet")
+                self.show_error_signal.emit(str(e))
+        self.wallet.thread.add(task)
 
     def on_fx_history(self):
         self.history_model.refresh('fx_history')
@@ -420,18 +433,26 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, Logger):
         elif event == 'gossip_db_loaded':
             self.channels_list.gossip_db_loaded.emit(*args)
         elif event == 'channels_updated':
-            self.channels_list.update_rows.emit(*args)
+            wallet = args[0]
+            if wallet == self.wallet:
+                self.channels_list.update_rows.emit(*args)
         elif event == 'channel':
-            self.channels_list.update_single_row.emit(*args)
-            self.update_status()
+            wallet = args[0]
+            if wallet == self.wallet:
+                self.channels_list.update_single_row.emit(*args)
+                self.update_status()
         elif event == 'request_status':
             self.on_request_status(*args)
         elif event == 'invoice_status':
             self.on_invoice_status(*args)
         elif event == 'payment_succeeded':
-            self.on_payment_succeeded(*args)
+            wallet = args[0]
+            if wallet == self.wallet:
+                self.on_payment_succeeded(*args)
         elif event == 'payment_failed':
-            self.on_payment_failed(*args)
+            wallet = args[0]
+            if wallet == self.wallet:
+                self.on_payment_failed(*args)
         elif event == 'status':
             self.update_status()
         elif event == 'banner':
@@ -570,7 +591,7 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, Logger):
 
     def select_backup_dir(self, b):
         name = self.config.get('backup_dir', '')
-        dirname = QFileDialog.getExistingDirectory(self, "Select your SSL certificate file", name)
+        dirname = QFileDialog.getExistingDirectory(self, "Select your wallet backup directory", name)
         if dirname:
             self.config.set_key('backup_dir', dirname)
             self.backup_dir_e.setText(dirname)
@@ -1171,7 +1192,6 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, Logger):
 
     def sign_payment_request(self, addr):
         alias = self.config.get('alias')
-        alias_privkey = None
         if alias and self.alias_info:
             alias_addr, alias_name, validated = self.alias_info
             if alias_addr:
@@ -1241,17 +1261,6 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, Logger):
         else:
             tooltip_text = _("{} copied to clipboard").format(title)
         QToolTip.showText(QCursor.pos(), tooltip_text, self)
-
-    def export_payment_request(self, addr):
-        r = self.wallet.receive_requests.get(addr)
-        pr = paymentrequest.serialize_request(r).SerializeToString()
-        name = r.id + '.bip70'
-        fileName = self.getSaveFileName(_("Select where to save your payment request"), name, "*.bip70")
-        if fileName:
-            with open(fileName, "wb+") as f:
-                f.write(util.to_bytes(pr))
-            self.show_message(_("Request saved successfully"))
-            self.saved = True
 
     def clear_receive_tab(self):
         self.receive_payreq_e.setText('')
@@ -1508,11 +1517,12 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, Logger):
             return
         self.invoice_list.update_item(key, req)
 
-    def on_payment_succeeded(self, key, description=None):
-        self.show_message(_('Payment succeeded'))
+    def on_payment_succeeded(self, wallet, key):
+        description = self.wallet.get_label(key)
+        self.notify(_('Payment succeeded') + '\n\n' + description)
         self.need_update.set()
 
-    def on_payment_failed(self, key, reason):
+    def on_payment_failed(self, wallet, key, reason):
         self.show_error(_('Payment failed') + '\n\n' + reason)
 
     def read_invoice(self):
@@ -2399,10 +2409,12 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, Logger):
         d = SeedDialog(self, seed, passphrase)
         d.exec_()
 
-    def show_qrcode(self, data, title = _("QR code"), parent=None):
+    def show_qrcode(self, data, title = _("QR code"), parent=None, *,
+                    help_text=None, show_copy_text_btn=False):
         if not data:
             return
-        d = QRDialog(data, parent or self, title)
+        d = QRDialog(data, parent or self, title, help_text=help_text,
+                     show_copy_text_btn=show_copy_text_btn)
         d.exec_()
 
     @protected
@@ -2609,7 +2621,7 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, Logger):
             self.show_critical(_("Electrum-NMC was unable to parse your transaction") + ":\n" + repr(e))
             return
 
-    def import_channel_backup(self, encrypted):
+    def import_channel_backup(self, encrypted: str):
         if not self.question('Import channel backup?'):
             return
         try:
@@ -2632,7 +2644,7 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, Logger):
             self.pay_to_URI(data)
             return
         if data.startswith('channel_backup:'):
-            self.import_channel_backup(data[15:])
+            self.import_channel_backup(data)
             return
         # else if the user scanned an offline signed tx
         tx = self.tx_from_text(data)
@@ -2661,6 +2673,13 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, Logger):
         tx = self.tx_from_text(text)
         if tx:
             self.show_transaction(tx)
+
+    def do_process_from_text_channel_backup(self):
+        text = text_dialog(self, _('Input channel backup'), _("Channel Backup:"), _("Load backup"))
+        if not text:
+            return
+        if text.startswith('channel_backup:'):
+            self.import_channel_backup(text)
 
     def do_process_from_file(self):
         tx = self.read_tx_from_file()

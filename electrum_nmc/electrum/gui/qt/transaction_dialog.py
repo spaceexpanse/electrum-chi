@@ -496,7 +496,7 @@ class BaseTxDialog(QDialog, MessageBoxMixin):
             self.name_fee_label.setText(name_fee_str)
         else:
             self.name_fee_label.setText("")
-        if ln_amount is None:
+        if ln_amount is None or ln_amount == 0:
             ln_amount_str = ''
         elif ln_amount > 0:
             ln_amount_str = _('Amount received in channels') + ': ' + format_amount(ln_amount) + ' ' + base_unit

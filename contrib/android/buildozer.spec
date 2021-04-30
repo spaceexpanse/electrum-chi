@@ -22,7 +22,6 @@ source.exclude_exts = spec
 source.exclude_dirs = bin, build, dist, contrib,
     electrum_nmc/electrum/tests,
     electrum_nmc/electrum/gui/qt,
-    electrum_nmc/electrum/gui/kivy/tools,
     electrum_nmc/electrum/gui/kivy/theming/light
 # (list) List of exclusions using pattern matching
 source.exclude_patterns = Makefile,setup*
@@ -123,7 +122,7 @@ android.add_activities = org.electrum.qr.SimpleScannerActivity
 #android.ouya.icon.filename = %(source.dir)s/data/ouya_icon.png
 
 # (str) XML file to include as an intent filters in <activity> tag
-android.manifest.intent_filters = electrum_nmc/electrum/gui/kivy/tools/bitcoin_intent.xml
+android.manifest.intent_filters = contrib/android/bitcoin_intent.xml
 
 # (str) launchMode to set for the main activity
 android.manifest.launch_mode = singleTask
