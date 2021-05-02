@@ -843,7 +843,7 @@ class Commands:
             conf = wallet.get_tx_height(name_new_txid).conf
             if conf < 12:
                 remaining_conf = 12 - conf
-                raise NamePreRegistrationPendingError("The name pre-registration is still pending; wait " + str(remaining_conf) + "more blocks")
+                raise NamePreRegistrationPendingError("The name pre-registration is still pending; wait " + str(remaining_conf) + " more blocks")
 
         name_op = {"op": OP_NAME_FIRSTUPDATE, "name": identifier_bytes, "rand": rand_bytes, "value": value_bytes}
         memo = "Registration: " + format_name_identifier(identifier_bytes)
