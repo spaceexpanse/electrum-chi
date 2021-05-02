@@ -1390,11 +1390,18 @@ class Commands:
 
         tx_best = None
         expired_tx_exists = False
+        expired_tx_height = None
         unmined_tx_exists = False
+        unmined_tx_height = None
         for tx_candidate in txs[::-1]:
             if tx_candidate["height"] < unexpired_height:
                 # Transaction is expired.  Skip.
                 expired_tx_exists = True
+                # We want to log the *latest* expired height.  We're iterating
+                # in reverse chronological order, so we only take the first one
+                # we see.
+                if expired_tx_height is None:
+                    expired_tx_height = tx_candidate["height"]
                 continue
             if tx_candidate["height"] > unverified_height:
                 # Transaction doesn't have enough verified depth.  What we do
@@ -1404,6 +1411,10 @@ class Commands:
                 if tx_candidate["height"] > unmined_height:
                     # Transaction is new; skip in favor of an older one.
                     unmined_tx_exists = True
+                    # We want to log the *earliest* unconfirmed height.  We're
+                    # iterating in reverse chronological order, so we take the
+                    # last one we see.
+                    unmined_tx_height = tx_candidate["height"]
                     continue
 
                 # We can't verify the transaction because we're still syncing,
@@ -1415,9 +1426,9 @@ class Commands:
             break
 
         if unmined_tx_exists:
-            raise NameUnconfirmedError("Name is purportedly unconfirmed")
+            raise NameUnconfirmedError('Name is purportedly unconfirmed (registration height {}, latest verified height {})'.format(unmined_tx_height, unverified_height))
         if expired_tx_exists:
-            raise NameExpiredError("Name is purportedly expired")
+            raise NameExpiredError("Name is purportedly expired (latest renewal height {}, latest unexpired height {})".format(expired_tx_height, unexpired_height))
         if tx_best is None:
             raise NameNeverExistedError("Name purportedly never existed")
         txid = tx_best["tx_hash"]
