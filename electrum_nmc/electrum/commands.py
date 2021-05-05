@@ -1385,8 +1385,8 @@ class Commands:
         # 18 server confirmations but under 12 local confirmations, then we're
         # probably still syncing, and we error.
         unexpired_height = max_chain_height - constants.net.NAME_EXPIRATION + 1
-        unverified_height = local_chain_height - 12
-        unmined_height = max_chain_height - 18
+        unverified_height = local_chain_height - 12 + 1
+        unmined_height = max_chain_height - 18 + 1
 
         tx_best = None
         expired_tx_exists = False
