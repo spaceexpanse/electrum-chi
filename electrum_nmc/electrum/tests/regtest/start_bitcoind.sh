@@ -20,5 +20,6 @@ rm -rf ~/.namecoin/regtest
 screen -S namecoind -X quit || true
 screen -S namecoind -m -d namecoind -regtest
 sleep 6
+namecoin-cli createwallet test_wallet
 addr=$(namecoin-cli getnewaddress)
 namecoin-cli generatetoaddress 150 $addr > /dev/null
