@@ -843,7 +843,7 @@ class Commands:
             conf = wallet.get_tx_height(name_new_txid).conf
             if conf < 12:
                 remaining_conf = 12 - conf
-                raise NamePreRegistrationPendingError("The name pre-registration is still pending; wait " + str(remaining_conf) + "more blocks")
+                raise NamePreRegistrationPendingError("The name pre-registration is still pending; wait " + str(remaining_conf) + " more blocks")
 
         name_op = {"op": OP_NAME_FIRSTUPDATE, "name": identifier_bytes, "rand": rand_bytes, "value": value_bytes}
         memo = "Registration: " + format_name_identifier(identifier_bytes)
@@ -1385,16 +1385,23 @@ class Commands:
         # 18 server confirmations but under 12 local confirmations, then we're
         # probably still syncing, and we error.
         unexpired_height = max_chain_height - constants.net.NAME_EXPIRATION + 1
-        unverified_height = local_chain_height - 12
-        unmined_height = max_chain_height - 18
+        unverified_height = local_chain_height - 12 + 1
+        unmined_height = max_chain_height - 18 + 1
 
         tx_best = None
         expired_tx_exists = False
+        expired_tx_height = None
         unmined_tx_exists = False
+        unmined_tx_height = None
         for tx_candidate in txs[::-1]:
             if tx_candidate["height"] < unexpired_height:
                 # Transaction is expired.  Skip.
                 expired_tx_exists = True
+                # We want to log the *latest* expired height.  We're iterating
+                # in reverse chronological order, so we only take the first one
+                # we see.
+                if expired_tx_height is None:
+                    expired_tx_height = tx_candidate["height"]
                 continue
             if tx_candidate["height"] > unverified_height:
                 # Transaction doesn't have enough verified depth.  What we do
@@ -1404,6 +1411,10 @@ class Commands:
                 if tx_candidate["height"] > unmined_height:
                     # Transaction is new; skip in favor of an older one.
                     unmined_tx_exists = True
+                    # We want to log the *earliest* unconfirmed height.  We're
+                    # iterating in reverse chronological order, so we take the
+                    # last one we see.
+                    unmined_tx_height = tx_candidate["height"]
                     continue
 
                 # We can't verify the transaction because we're still syncing,
@@ -1415,9 +1426,9 @@ class Commands:
             break
 
         if unmined_tx_exists:
-            raise NameUnconfirmedError("Name is purportedly unconfirmed")
+            raise NameUnconfirmedError('Name is purportedly unconfirmed (registration height {}, latest verified height {})'.format(unmined_tx_height, unverified_height))
         if expired_tx_exists:
-            raise NameExpiredError("Name is purportedly expired")
+            raise NameExpiredError("Name is purportedly expired (latest renewal height {}, latest unexpired height {})".format(expired_tx_height, unexpired_height))
         if tx_best is None:
             raise NameNeverExistedError("Name purportedly never existed")
         txid = tx_best["tx_hash"]
