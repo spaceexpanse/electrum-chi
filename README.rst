@@ -109,6 +109,11 @@ Compile the Qt UI::
     sudo apt-get install pyqt5-dev-tools
     ./contrib/make_qt_forms
 
+Copy over the www root::
+
+    rm -rf electrum_nmc/electrum/www
+    cp -a electrum/www electrum_nmc/electrum/www
+
 Create translations (optional)::
 
     sudo apt-get install python-requests gettext
