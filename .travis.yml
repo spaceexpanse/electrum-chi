@@ -43,7 +43,6 @@ jobs:
       install: pip install flake8
       script: flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
     - stage: binary builds
-      if: (branch = master) OR (tag IS present)
       name: "Windows build"
       language: c
       python: false
@@ -56,8 +55,7 @@ jobs:
       script:
         - sudo docker run --name electrum-wine-builder-cont -v $PWD:/opt/wine64/drive_c/electrum --rm --workdir /opt/wine64/drive_c/electrum/contrib/build-wine electrum-wine-builder-img ./build.sh
       after_success: true
-    - if: (branch = master) OR (tag IS present)
-      name: "Android build"
+    - name: "Android build"
       language: python
       python: 3.7
       services:
@@ -76,8 +74,7 @@ jobs:
         - ls -la bin
         - if [ $(ls bin | grep -c Electrum-*) -eq 0 ]; then exit 1; fi
       after_success: true
-    - if: (branch = master) OR (tag IS present)
-      name: "MacOS build"
+    - name: "MacOS build"
       os: osx
       language: c
       env:
@@ -88,8 +85,7 @@ jobs:
       script: ./contrib/osx/make_osx
       after_script: ls -lah dist && md5 dist/*
       after_success: true
-    - if: (branch = master) OR (tag IS present)
-      name: "AppImage build"
+    - name: "AppImage build"
       language: c
       python: false
       services:
@@ -99,8 +95,7 @@ jobs:
       script:
         - sudo docker run --name electrum-appimage-builder-cont -v $PWD:/opt/electrum --rm --workdir /opt/electrum/contrib/build-linux/appimage electrum-appimage-builder-img ./build.sh
       after_success: true
-    - if: (branch = master) OR (tag IS present)
-      name: "tarball build"
+    - name: "tarball build"
       language: c
       python: false
       services:
