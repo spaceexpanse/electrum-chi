@@ -52,7 +52,7 @@ RUN wget -nc https://dl.winehq.org/wine-builds/Release.key && \
         winehq-stable:amd64=5.0.3~focal \
         && \
     apt-get install -qy \
-        pyqt5-dev-tools=5.10.1+dfsg-1ubuntu2 \
+        pyqt5-dev-tools=5.14.1+dfsg-3build1 \
         && \
     rm -rf /var/lib/apt/lists/* && \
     apt-get autoremove -y && \
