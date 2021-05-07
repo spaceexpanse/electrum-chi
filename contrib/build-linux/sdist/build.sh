@@ -10,7 +10,9 @@ DISTDIR="$PROJECT_ROOT/dist"
 . "$CONTRIB"/build_tools_util.sh
 
 info "Compiling Namecoin-Qt forms..."
+pushd "$PROJECT_ROOT"
 ./contrib/make_qt_forms
+popd
 
 info "Copying www root..."
 rm -rf electrum_nmc/electrum/www
