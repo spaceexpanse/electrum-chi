@@ -15,8 +15,10 @@ pushd "$PROJECT_ROOT"
 popd
 
 info "Copying www root..."
+pushd "$PROJECT_ROOT"
 rm -rf electrum_nmc/electrum/www
 cp -a electrum/www electrum_nmc/electrum/www
+popd
 
 # note that at least py3.7 is needed, to have https://bugs.python.org/issue30693
 python3 --version || fail "python interpreter not found"
