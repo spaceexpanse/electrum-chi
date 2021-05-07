@@ -6,7 +6,7 @@ PYTHON = python3
 
 theming:
 	#bash -c 'for i in network lightning; do convert -background none theming/light/$i.{svg,png}; done'
-	$(PYTHON) -m kivy.atlas ../../electrum/gui/kivy/theming/light 1024 ../../electrum/gui/kivy/theming/light/*.png
+	$(PYTHON) -m kivy.atlas ../../electrum_nmc/electrum/gui/kivy/theming/light 1024 ../../electrum_nmc/electrum/gui/kivy/theming/light/*.png
 prepare:
 	# running pre build setup
 	@cp buildozer.spec ../../buildozer.spec
