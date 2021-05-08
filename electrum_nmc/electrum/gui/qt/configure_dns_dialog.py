@@ -441,7 +441,7 @@ class ConfigureDNSDialog(QDialog, MessageBoxMixin):
             formatted_record_type = "TLS"
             formatted_data = json.dumps(data)
         elif record_type == "sshfp":
-            formatted_record_type = "SSHFP"
+            formatted_record_type = "SSH"
             formatted_data = json.dumps(data)
         elif record_type == "txt":
             formatted_record_type = "TXT"
