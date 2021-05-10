@@ -838,7 +838,8 @@ class AddressSynchronizer(Logger):
                 prevout = TxOutpoint.from_str(txo)
                 utxo = utxos[prevout]
                 if utxo.name_op is not None:
-                    if hide_expired and 'name' in utxo.name_op and name_expires_in(tx_height, self.get_local_height()) <= 0:
+                    expires_in = name_expires_in(tx_height, self.get_local_height())
+                    if hide_expired and 'name' in utxo.name_op and expires_in is not None and expires_in <= 0:
                         # name_anyupdate has expired; hide the entire balance of this output
                         hidden_v = v
                     else:
