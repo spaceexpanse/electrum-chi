@@ -241,7 +241,7 @@ class AddressesDialog(Factory.Popup):
         cards = []
         for address in _list:
             label = wallet.labels.get(address, '')
-            balance = sum(wallet.get_addr_balance(address))
+            balance = sum(wallet.get_addr_balance(address, hide_expired=True))
             is_used_and_empty = wallet.is_used(address) and balance == 0
             if self.show_used == 1 and (balance or is_used_and_empty):
                 continue
@@ -260,7 +260,7 @@ class AddressesDialog(Factory.Popup):
 
     def show_item(self, obj):
         address = obj.address
-        c, u, x = self.app.wallet.get_addr_balance(address)
+        c, u, x = self.app.wallet.get_addr_balance(address, hide_expired=True)
         balance = c + u + x
         d = AddressPopup(self, address, balance, obj.status)
         d.open()
