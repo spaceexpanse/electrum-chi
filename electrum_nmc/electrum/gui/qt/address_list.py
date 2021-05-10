@@ -161,7 +161,7 @@ class AddressList(MyTreeView):
         for address in addr_list:
             num = self.wallet.get_address_history_len(address)
             label = self.wallet.labels.get(address, '')
-            c, u, x = self.wallet.get_addr_balance(address)
+            c, u, x = self.wallet.get_addr_balance(address, hide_expired=True)
             balance = c + u + x
             is_used_and_empty = self.wallet.is_used(address) and balance == 0
             if self.show_used == AddressUsageStateFilter.UNUSED and (balance or is_used_and_empty):
