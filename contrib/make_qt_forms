@@ -10,5 +10,6 @@ fi
 for FORMXMLPATH in electrum_nmc/electrum/gui/qt/forms/*.ui; do
     FORMPYPATH=$(echo $FORMXMLPATH | sed 's/\.ui$/.py/')
     pyuic5 "$FORMXMLPATH" --execute --output="$FORMPYPATH"
+    sed -i s/qpaytoedit/.qpaytoedit/ "$FORMPYPATH"
     sed -i s/qvalidatedlineedit/.qvalidatedlineedit/ "$FORMPYPATH"
 done
