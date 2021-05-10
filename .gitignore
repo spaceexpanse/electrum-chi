@@ -45,3 +45,6 @@ electrum_nmc/electrum/*.so
 electrum_nmc/electrum/*.so.0
 electrum_nmc/electrum/*.dll
 electrum_nmc/electrum/*.dylib
+
+# Namecoin copy of www root
+electrum_nmc/electrum/www
