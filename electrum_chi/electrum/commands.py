@@ -1200,19 +1200,21 @@ class Commands:
         max_chain_height = max(local_chain_height, server_chain_height)
 
         # Pick the most recent name op that's confirmed
-        unmined_height = max_chain_height
+        unmined_height = max_chain_height + 1
 
         tx_best = None
         expired_tx_exists = False
+        expired_tx_height = None
         unmined_tx_exists = False
+        unmined_tx_height = None
         for tx_candidate in txs[::-1]:
             tx_best = tx_candidate
             break
 
         if unmined_tx_exists:
-            raise NameUnconfirmedError("Name is purportedly unconfirmed")
+            raise NameUnconfirmedError('Name is purportedly unconfirmed (registration height {}, latest verified height {})'.format(unmined_tx_height, unverified_height))
         if expired_tx_exists:
-            raise NameExpiredError("Name is purportedly expired")
+            raise NameExpiredError("Name is purportedly expired (latest renewal height {}, latest unexpired height {})".format(expired_tx_height, unexpired_height))
         if tx_best is None:
             raise NameNeverExistedError("Name purportedly never existed")
         txid = tx_best["tx_hash"]

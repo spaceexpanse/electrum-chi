@@ -4,6 +4,7 @@ import unittest
 import subprocess
 
 class TestLightning(unittest.TestCase):
+    create_opts = ""
 
     @staticmethod
     def run_shell(args, timeout=30):
@@ -19,7 +20,7 @@ class TestLightning(unittest.TestCase):
         sys.stdout.write("***** %s ******\n" % test_name)
         # initialize and get funds
         for agent in self.agents:
-            self.run_shell(['init', agent])
+            self.run_shell(['init', agent, self.create_opts])
         # mine a block so that funds are confirmed
         self.run_shell(['new_block'])
         # extra configuration (optional)
@@ -50,6 +51,21 @@ class TestLightningAB(TestLightning):
 
     def test_breach_with_spent_htlc(self):
         self.run_shell(['breach_with_spent_htlc'])
+
+
+class TestNamecoinABDefaultSeed(TestLightning):
+    agents = TestLightningAB.agents
+
+    def test_name_registration(self):
+        self.run_shell(['name_registration'])
+
+
+class TestNamecoinABSegwitSeed(TestNamecoinABDefaultSeed):
+    create_opts = "--seed_type segwit"
+
+
+class TestNamecoinABStandardSeed(TestNamecoinABDefaultSeed):
+    create_opts = "--seed_type standard"
 
 
 class TestLightningABC(TestLightning):

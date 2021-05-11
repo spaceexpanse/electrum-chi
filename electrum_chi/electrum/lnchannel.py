@@ -1282,7 +1282,7 @@ class Channel(AbstractChannel):
         remainder = sender_balance_msat - sender_reserve_msat - ctx_fees_msat[sender]
         if remainder < 0:
             raise Exception(f"Cannot update_fee. {sender} tried to update fee but they cannot afford it. "
-                            f"Their balance would go below reserve: {remainder} msat missing.")
+                            f"Their balance would go below reserve: {remainder} mswartz missing.")
         with self.db_lock:
             if from_us:
                 assert self.can_send_ctx_updates(), f"cannot update channel. {self.get_state()!r} {self.peer_state!r}"
