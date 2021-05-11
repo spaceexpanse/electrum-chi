@@ -1,4 +1,5 @@
 from electrum import auxpow, blockchain, constants
+from electrum.merkle import hash_merkle_root
 from electrum.util import bfh, bh2u
 
 from . import SequentialTestCase
@@ -242,7 +243,7 @@ def update_merkle_root_to_match_coinbase(auxpow_header):
 
     revised_coinbase_txid = auxpow.fast_txid(coinbase)
     revised_merkle_branch = [revised_coinbase_txid]
-    revised_merkle_root = auxpow.calculate_merkle_root(revised_coinbase_txid, revised_merkle_branch, auxpow_header['coinbase_merkle_index'])
+    revised_merkle_root = hash_merkle_root(revised_merkle_branch, revised_coinbase_txid, auxpow_header['coinbase_merkle_index'])
 
     auxpow_header['parent_header']['merkle_root'] = revised_merkle_root
     auxpow_header['coinbase_merkle_branch'] = revised_merkle_branch

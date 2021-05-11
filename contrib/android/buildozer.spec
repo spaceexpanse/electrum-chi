@@ -7,7 +7,7 @@ title = Electrum-CHI
 package.name = Electrum_CHI
 
 # (str) Package domain (needed for android/ios packaging)
-package.domain = io.xaya.electrum_chi
+package.domain = org.namecoin.electrum_chi
 
 # (str) Source code where the main.py live
 source.dir = .
@@ -22,7 +22,6 @@ source.exclude_exts = spec
 source.exclude_dirs = bin, build, dist, contrib,
     electrum_chi/electrum/tests,
     electrum_chi/electrum/gui/qt,
-    electrum_chi/electrum/gui/kivy/tools,
     electrum_chi/electrum/gui/kivy/theming/light
 # (list) List of exclusions using pattern matching
 source.exclude_patterns = Makefile,setup*
@@ -46,8 +45,7 @@ requirements =
     kivy==39c17457bae91baf8fe710dc989791e45879f136,
     libffi,
     libsecp256k1,
-    cryptography,
-    neoscrypt-python
+    cryptography
 
 # (str) Presplash of the application
 #presplash.filename = %(source.dir)s/gui/kivy/theming/splash.png
@@ -124,7 +122,7 @@ android.add_activities = org.electrum.qr.SimpleScannerActivity
 #android.ouya.icon.filename = %(source.dir)s/data/ouya_icon.png
 
 # (str) XML file to include as an intent filters in <activity> tag
-android.manifest.intent_filters = electrum_chi/electrum/gui/kivy/tools/bitcoin_intent.xml
+android.manifest.intent_filters = contrib/android/bitcoin_intent.xml
 
 # (str) launchMode to set for the main activity
 android.manifest.launch_mode = singleTask

@@ -49,6 +49,7 @@ from . import blockchain
 from .bitcoin import hash_encode, hash_decode
 from . import constants
 from .crypto import sha256d
+from .merkle import hash_merkle_root
 from . import transaction
 from .transaction import BCDataStream, Transaction, TxOutput, TYPE_SCRIPT
 from .util import bfh, bh2u
@@ -137,23 +138,13 @@ def deserialize_merkle_branch(s, start_position=0):
     index = vds.read_int32()
     return hashes, index, vds.read_cursor
 
-# Reimplementation of btcutils.check_merkle_branch from Electrum-DOGE.
-# btcutils seems to have an unclear license and no obvious Git repo, so it
-# seemed wiser to re-implement.
-# This re-implementation is roughly based on libdohj's calculateMerkleRoot.
-def calculate_merkle_root(leaf, merkle_branch, index):
-    target = hash_decode(leaf)
-    mask = index
+def hash_parent_header(header):
+    if not auxpow_active(header):
+        return blockchain.hash_header(header)
 
-    for merkle_step in merkle_branch:
-        if mask & 1 == 0: # 0 means it goes on the right
-            data_to_hash = target + hash_decode(merkle_step)
-        else:
-            data_to_hash = hash_decode(merkle_step) + target
-        target = sha256d(data_to_hash)
-        mask = mask >> 1
+    verify_auxpow(header)
 
-    return hash_encode(target)
+    return blockchain.hash_header(header['auxpow']['parent_header'])
 
 # Copied from Electrum-DOGE
 # TODO: Audit this function carefully.
@@ -196,12 +187,12 @@ def verify_auxpow(auxpow, auxhash):
     #std::reverse(vchRootHash.begin(), vchRootHash.end()); // correct endian
 
     # Check that the chain merkle root is in the coinbase
-    root_hash_bytes = bfh(calculate_merkle_root(auxhash, chain_merkle_branch, chain_index))
+    root_hash_bytes = bfh(hash_merkle_root(chain_merkle_branch, auxhash, chain_index))
 
     # Check that we are in the parent block merkle tree
     # if (CBlock::CheckMerkleBranch(GetHash(), vMerkleBranch, nIndex) != parentBlock.hashMerkleRoot)
     #    return error("Aux POW merkle root incorrect");
-    if (calculate_merkle_root(coinbase_hash, coinbase_merkle_branch, coinbase_index) != parent_block['merkle_root']):
+    if (hash_merkle_root(coinbase_merkle_branch, coinbase_hash, coinbase_index) != parent_block['merkle_root']):
         raise AuxPoWBadCoinbaseMerkleBranchError("Aux POW merkle root incorrect")
 
     #// Check that there is at least one input.

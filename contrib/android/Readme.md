@@ -1,6 +1,6 @@
 # Kivy GUI
 
-The Kivy GUI is used with Electrum-NMC on Android devices.
+The Kivy GUI is used with Electrum-CHI on Android devices.
 To generate an APK file, follow these instructions.
 
 ## Android binary with Docker
@@ -24,7 +24,7 @@ folder.
 2. Build image
 
     ```
-    $ sudo docker build -t electrum-chi-android-builder-img electrum_chi/electrum/gui/kivy/tools
+    $ sudo docker build -t electrum-chi-android-builder-img contrib/android
     ```
 
 3. Build locale files
@@ -50,7 +50,7 @@ folder.
         -v ~/.keystore:/home/user/.keystore \
         --workdir /home/user/wspace/electrum \
         electrum-chi-android-builder-img \
-        ./contrib/make_apk
+        ./contrib/android/make_apk
     ```
     This mounts the project dir inside the container,
     and so the modifications will affect it, e.g. `.buildozer` folder
@@ -70,7 +70,7 @@ You probably need to clear the cache: `rm -rf .buildozer/android/platform/build/
 Assuming `adb` is installed:
 ```
 $ adb -d install -r bin/Electrum-*-arm64-v8a-debug.apk
-$ adb shell monkey -p io.xaya.electrum_chi.electrum_chi 1
+$ adb shell monkey -p org.namecoin.electrum_chi.electrum_chi 1
 ```
 
 
@@ -95,14 +95,14 @@ adb logcat | grep python
 ```
 Better `grep` but fragile because of `cut`:
 ```
-adb logcat | grep -F "`adb shell ps | grep org.electrum.electrum | cut -c14-19`"
+adb logcat | grep -F "`adb shell ps | grep org.namecoin.electrum_chi.electrum_chi | cut -c14-19`"
 ```
 
 
 ### Kivy can be run directly on Linux Desktop. How?
 Install Kivy.
 
-Build atlas: `(cd electrum_chi/electrum/gui/kivy/; make theming)`
+Build atlas: `(cd contrib/android/; make theming)`
 
 Run electrum-chi with the `-g` switch: `electrum-chi -g kivy`
 
@@ -122,6 +122,6 @@ of Android does not let you access the internal storage of an app without root.
 (See [this](https://stackoverflow.com/q/9017073))
 ```
 $ adb shell
-$ run-as org.electrum.electrum ls /data/data/org.electrum.electrum/files/data
-$ run-as org.electrum.electrum cp /data/data/org.electrum.electrum/files/data/wallets/my_wallet /sdcard/some_path/my_wallet
+$ run-as org.namecoin.electrum_chi.electrum_chi ls /data/data/org.namecoin.electrum_chi.electrum_chi/files/data
+$ run-as org.namecoin.electrum_chi.electrum_chi cp /data/data/org.namecoin.electrum_chi.electrum_chi/files/data/wallets/my_wallet /sdcard/some_path/my_wallet
 ```
