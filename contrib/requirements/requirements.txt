@@ -11,4 +11,5 @@ certifi
 bitstring
 attrs
 
+jsonrpcserver>=4.0.5
 neoscrypt_python>=1.0.2
