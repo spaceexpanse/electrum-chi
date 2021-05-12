@@ -120,7 +120,7 @@ class ElectrumGui:
             if not self.wallet.up_to_date:
                 msg = _( "Synchronizing..." )
             else:
-                c, u, x =  self.wallet.get_balance()
+                c, u, x =  self.wallet.get_balance(hide_expired=True)
                 msg = _("Balance")+": %f  "%(Decimal(c) / COIN)
                 if u:
                     msg += "  [%f unconfirmed]"%(Decimal(u) / COIN)

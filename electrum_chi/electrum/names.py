@@ -56,7 +56,7 @@ def get_name_op_from_output_script(_bytes):
     # Extract the name script if one is present.
     return split_name_script(decoded)["name_op"]
 
-def name_op_to_script(name_op):
+def name_op_to_script(name_op) -> str:
     if name_op is None:
         script = ''
     elif name_op["op"] == OP_NAME_REGISTER:
@@ -115,15 +115,15 @@ def validate_value_length(value):
     except json.decoder.JSONDecodeError:
         raise BitcoinException(f"Value is invalid JSON: {value}")
 
-def name_identifier_to_scripthash(identifier_bytes):
-    name_op = {"op": OP_NAME_UPDATE, "name": identifier_bytes, "value": bytes([])}
+def name_identifier_to_scripthash(identifier: bytes) -> str:
+    name_op = {"op": OP_NAME_UPDATE, "name": identifier, "value": bytes([])}
     script = name_op_to_script(name_op)
     script += '6a' # OP_RETURN
 
     return script_to_scripthash(script)
 
 
-def identifier_to_namespace(identifier_bytes):
+def identifier_to_namespace(identifier_bytes: bytes) -> Optional[str]:
     try:
         identifier = identifier_bytes.decode("ascii")
     except UnicodeDecodeError:
@@ -175,7 +175,7 @@ def identifier_to_namespace(identifier_bytes):
 
     return namespace
 
-def format_name_identifier(identifier_bytes):
+def format_name_identifier(identifier_bytes: bytes) -> str:
     try:
         identifier = identifier_bytes.decode("utf-8")
     except UnicodeDecodeError:
@@ -194,16 +194,15 @@ def format_name_identifier(identifier_bytes):
 
 def format_name_identifier_player(identifier):
     label = identifier[len("p/"):]
-
     return "Player: " + label
 
 
 def format_name_identifier_game(identifier):
     label = identifier[len("g/"):]
-
     return "Game: " + label
 
-def format_name_identifier_unknown(identifier):
+
+def format_name_identifier_unknown(identifier: str) -> str:
     # Check for non-printable characters, and print ASCII if none are found.
     if identifier.isprintable():
         return f"Non-standard name '{identifier}'"
@@ -211,11 +210,11 @@ def format_name_identifier_unknown(identifier):
     return format_name_identifier_unknown_hex(identifier.encode("ascii"))
 
 
-def format_name_identifier_unknown_hex(identifier_bytes):
+def format_name_identifier_unknown_hex(identifier_bytes: bytes) -> str:
     return "Non-standard name 0x" + bh2u(identifier_bytes)
 
 
-def format_name_value(value_bytes):
+def format_name_value(value_bytes: bytes) -> str:
     try:
         value = value_bytes.decode("ascii")
     except UnicodeDecodeError:
@@ -227,11 +226,11 @@ def format_name_value(value_bytes):
     return f"JSON {value}"
 
 
-def format_name_value_hex(value_bytes):
+def format_name_value_hex(value_bytes: bytes) -> str:
     return "0x" + bh2u(value_bytes)
 
 
-def format_name_op(name_op):
+def format_name_op(name_op) -> str:
     if name_op is None:
         return ''
     if "name" in name_op:
@@ -243,6 +242,7 @@ def format_name_op(name_op):
         return "\tRegistration\n\t\t" + formatted_name + "\n\t\t" + formatted_value
     if name_op["op"] == OP_NAME_UPDATE:
         return "\tUpdate\n\t\t" + formatted_name + "\n\t\t" + formatted_value
+
 
 def name_op_to_json(name_op: Dict) -> Dict[str, str]:
     result = deepcopy(name_op)
@@ -267,7 +267,8 @@ def name_op_to_json(name_op: Dict) -> Dict[str, str]:
 
     return result
 
-def get_default_name_tx_label(wallet, tx):
+
+def get_default_name_tx_label(wallet, tx) -> Optional[str]:
     for idx, o in enumerate(tx.outputs()):
         name_op = o.name_op
         if name_op is not None:

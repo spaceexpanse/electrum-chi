@@ -967,7 +967,7 @@ class ElectrumWindow(QMainWindow, MessageBoxMixin, Logger):
                 text = _("Server is lagging ({} blocks)").format(server_lag)
                 icon = read_QIcon("status_lagging%s.png"%fork_str)
             else:
-                c, u, x = self.wallet.get_balance()
+                c, u, x = self.wallet.get_balance(hide_expired=True)
                 text =  _("Balance" ) + ": %s "%(self.format_amount_and_units(c))
                 if u:
                     text +=  " [%s unconfirmed]"%(self.format_amount(u, is_diff=True).strip())

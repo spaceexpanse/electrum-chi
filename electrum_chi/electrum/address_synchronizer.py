@@ -810,11 +810,11 @@ class AddressSynchronizer(Logger):
         return sum([v for height, v, is_cb in received.values()])
 
     @with_local_height_cached
-    def get_addr_balance(self, address, *, excluded_coins: Set[str] = None) -> Tuple[int, int, int]:
+    def get_addr_balance(self, address, *, excluded_coins: Set[str] = None, hide_expired: bool = False) -> Tuple[int, int, int]:
         """Return the balance of a bitcoin address:
         confirmed and matured, unconfirmed, unmatured
         """
-        if not excluded_coins:  # cache is only used if there are no excluded_coins
+        if not excluded_coins and not hide_expired:  # cache is only used if there are no excluded_coins
             cached_value = self._get_addr_balance_cache.get(address)
             if cached_value:
                 return cached_value
@@ -838,7 +838,13 @@ class AddressSynchronizer(Logger):
                 prevout = TxOutpoint.from_str(txo)
                 utxo = utxos[prevout]
                 if utxo.name_op is not None:
-                    hidden_v = COIN // 100
+                    expired = False
+                    if hide_expired and 'name' in utxo.name_op and expired:
+                        # name_anyupdate has expired; hide the entire balance of this output
+                        hidden_v = v
+                    else:
+                        # Name is unexpired; only hide the 0.01 NMC
+                        hidden_v = COIN // 100
 
             if is_cb and tx_height + COINBASE_MATURITY > mempool_height:
                 x += v - hidden_v
@@ -853,7 +859,7 @@ class AddressSynchronizer(Logger):
                     u -= v
         result = c, u, x
         # cache result.
-        if not excluded_coins:
+        if not excluded_coins and not hide_expired:
             # Cache needs to be invalidated if a transaction is added to/
             # removed from history; or on new blocks (maturity...)
             self._get_addr_balance_cache[address] = result
@@ -907,7 +913,7 @@ class AddressSynchronizer(Logger):
         return coins
 
     def get_balance(self, domain=None, *, excluded_addresses: Set[str] = None,
-                    excluded_coins: Set[str] = None) -> Tuple[int, int, int]:
+                    excluded_coins: Set[str] = None, hide_expired: bool = False) -> Tuple[int, int, int]:
         if domain is None:
             domain = self.get_addresses()
         if excluded_addresses is None:
@@ -916,7 +922,7 @@ class AddressSynchronizer(Logger):
         domain = set(domain) - excluded_addresses
         cc = uu = xx = 0
         for addr in domain:
-            c, u, x = self.get_addr_balance(addr, excluded_coins=excluded_coins)
+            c, u, x = self.get_addr_balance(addr, excluded_coins=excluded_coins, hide_expired=hide_expired)
             cc += c
             uu += u
             xx += x
