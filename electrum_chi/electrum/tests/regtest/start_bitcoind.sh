@@ -20,6 +20,6 @@ rm -rf ~/.xaya/regtest
 screen -S xayad -X quit || true
 screen -S xayad -m -d xayad -regtest
 sleep 6
-xaya-cli createwallet ""
+xaya-cli createwallet test_wallet
 addr=$(xaya-cli getnewaddress)
 xaya-cli generatetoaddress 150 $addr > /dev/null
