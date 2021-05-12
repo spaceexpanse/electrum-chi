@@ -206,13 +206,13 @@ def format_name_identifier_game(identifier):
 def format_name_identifier_unknown(identifier):
     # Check for non-printable characters, and print ASCII if none are found.
     if identifier.isprintable():
-        return 'Non-standard name "' + identifier + '"'
+        return f"Non-standard name '{identifier}'"
 
     return format_name_identifier_unknown_hex(identifier.encode("ascii"))
 
 
 def format_name_identifier_unknown_hex(identifier_bytes):
-    return "Non-standard hex name " + bh2u(identifier_bytes)
+    return "Non-standard name 0x" + bh2u(identifier_bytes)
 
 
 def format_name_value(value_bytes):
@@ -224,11 +224,11 @@ def format_name_value(value_bytes):
     if not value.isprintable():
         return format_name_value_hex(value_bytes)
 
-    return "JSON " + value
+    return f"JSON {value}"
 
 
 def format_name_value_hex(value_bytes):
-    return "Hex " + bh2u(value_bytes)
+    return "0x" + bh2u(value_bytes)
 
 
 def format_name_op(name_op):

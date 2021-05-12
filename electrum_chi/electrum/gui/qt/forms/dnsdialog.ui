@@ -66,7 +66,7 @@
           </size>
          </property>
          <property name="text">
-          <string>Enter a hostname to direct .bit requests. Namecoin A records are for IPv4, IPv6, tor, freenet, i2p addresses only and tell a request where your domain should direct to.</string>
+          <string>Namecoin A records are for IPv4, IPv6, Tor, Freenet, I2P, and ZeroNet addresses only and specify where your domain should direct to.</string>
          </property>
          <property name="wordWrap">
           <bool>true</bool>
@@ -137,7 +137,7 @@
               </size>
              </property>
              <property name="text">
-              <string>Hostname</string>
+              <string>Address</string>
              </property>
             </widget>
            </item>
@@ -147,7 +147,7 @@
               <string/>
              </property>
              <property name="placeholderText">
-              <string>e.g., 192.168.0.1, eqt5g4fuenphqinx.onion</string>
+              <string>e.g., 192.168.0.1, rw6nbpjrmcpdxszn3air4bt7t75rpz4cp3c2kbdu72ptua57tzvin4id.onion</string>
              </property>
             </widget>
            </item>
@@ -189,7 +189,7 @@
        <item>
         <widget class="QLabel" name="labelCNAMEDesc">
          <property name="text">
-          <string>CNAME records act as an alias by mapping a hostname to another hostname. Absolute domain names end with a dot (.).</string>
+          <string>CNAME records act as an alias by mapping a hostname to another hostname. Absolute domain names must end with a dot (.).</string>
          </property>
          <property name="wordWrap">
           <bool>true</bool>
@@ -360,7 +360,7 @@
        <item>
         <widget class="QLabel" name="labelDNAMEDesc">
          <property name="text">
-          <string>Specifies that all subdomains of this name are translated to the given string before lookup. As with CNAME, absolute domain names end with a dot (.).</string>
+          <string>Specifies that all subdomains of this name are translated to the given string before lookup. As with CNAME, absolute domain names must end with a dot (.).</string>
          </property>
          <property name="wordWrap">
           <bool>true</bool>
@@ -461,7 +461,7 @@
        <item>
         <widget class="QLabel" name="labelDSDesc">
          <property name="text">
-          <string>DNSSEC fingerprints for securing the domain when used with DNS via ns. Format roughly mirrors RFC3658. </string>
+          <string>DNSSEC fingerprints for securing the domain when used with DNS via NS. Format roughly mirrors RFC3658. </string>
          </property>
          <property name="wordWrap">
           <bool>true</bool>
@@ -808,7 +808,7 @@
        <item>
         <widget class="QLabel" name="labelSRVDesc">
          <property name="text">
-          <string>Used to identify hosts that support particular services (e.g., imap, pop, https, etc) as per DNS SRV records. In the host field, absolute domain names end with a dot (.).</string>
+          <string>Used to identify hosts that support particular services (e.g., IMAP, POP, SMTP, XMPP, Matrix, or Mumble). In the host field, absolute domain names must end with a dot (.).</string>
          </property>
          <property name="wordWrap">
           <bool>true</bool>
@@ -1017,7 +1017,7 @@
        <item>
         <widget class="QLabel" name="labelIMPORTDesc">
          <property name="text">
-          <string>Imports specified entries from Namecoin names and merges with the current one. Optionally, import entries and associate them with a designated subdomain.</string>
+          <string>Imports specified entries from another Namecoin name and merges with the current one. Optionally, import entries and associate them with a designated subdomain.</string>
          </property>
          <property name="wordWrap">
           <bool>true</bool>
@@ -1104,13 +1104,13 @@
      </widget>
      <widget class="QWidget" name="tabSSHFP">
       <attribute name="title">
-       <string>SSHFP</string>
+       <string>SSH</string>
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_30">
        <item>
         <widget class="QLabel" name="labelSSHFPDesc">
          <property name="text">
-          <string>SSHFP records are used to identify an SSH fingerprint associated with a domain.</string>
+          <string>SSH records are used to identify an SSH server fingerprint associated with a domain.</string>
          </property>
         </widget>
        </item>
