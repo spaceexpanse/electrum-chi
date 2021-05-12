@@ -6,12 +6,12 @@ PYTHON = python3
 
 theming:
 	#bash -c 'for i in network lightning; do convert -background none theming/light/$i.{svg,png}; done'
-	$(PYTHON) -m kivy.atlas ../../electrum/gui/kivy/theming/light 1024 ../../electrum/gui/kivy/theming/light/*.png
+	$(PYTHON) -m kivy.atlas ../../electrum_nmc/electrum/gui/kivy/theming/light 1024 ../../electrum_nmc/electrum/gui/kivy/theming/light/*.png
 prepare:
 	# running pre build setup
 	@cp buildozer.spec ../../buildozer.spec
 	# copy electrum to main.py
-	@cp ../../run_electrum ../../main.py
+	@cp ../../run_electrum_nmc ../../main.py
 	@-if [ ! -d "../../.buildozer" ];then \
 		cd ../..; buildozer android debug;\
 		cp -f blacklist.txt .buildozer/android/platform/python-for-android/src/blacklist.txt;\

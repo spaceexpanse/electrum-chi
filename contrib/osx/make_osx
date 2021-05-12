@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Parameterize
-PYTHON_VERSION=3.7.7
+PYTHON_VERSION=3.7.9
 BUILDDIR=/tmp/electrum-chi-build
 PACKAGE=Electrum-CHI
 GIT_REPO=https://github.com/xaya/electrum-chi
@@ -74,7 +74,7 @@ pyenv global $PYTHON_VERSION || \
 fail "Unable to use Python $PYTHON_VERSION"
 
 info "Installing build dependencies"
-python3 -m pip install --no-dependencies -Ir ./contrib/deterministic-build/requirements-mac-build.txt --user \
+python3 -m pip install --no-dependencies -Ir ./contrib/deterministic-build/requirements-build-mac.txt --user \
     || fail "Could not install build dependencies"
 
 info "Using these versions for building $PACKAGE:"
@@ -136,7 +136,7 @@ python3 -m pip install --no-dependencies -Ir ./contrib/deterministic-build/requi
     || fail "Could not install hardware wallet requirements"
 
 info "Installing dependencies specific to binaries..."
-python3 -m pip install --no-dependencies -Ir ./contrib/deterministic-build/requirements-binaries.txt --user \
+python3 -m pip install --no-dependencies -Ir ./contrib/deterministic-build/requirements-binaries-mac.txt --user \
     || fail "Could not install dependencies specific to binaries"
 
 info "Building $PACKAGE..."

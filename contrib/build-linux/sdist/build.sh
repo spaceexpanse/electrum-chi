@@ -10,21 +10,25 @@ DISTDIR="$PROJECT_ROOT/dist"
 . "$CONTRIB"/build_tools_util.sh
 
 info "Compiling Namecoin-Qt forms..."
+pushd "$PROJECT_ROOT"
 ./contrib/make_qt_forms
+popd
 
 info "Copying www root..."
+pushd "$PROJECT_ROOT"
 rm -rf electrum_nmc/electrum/www
 cp -a electrum/www electrum_nmc/electrum/www
+popd
 
 # note that at least py3.7 is needed, to have https://bugs.python.org/issue30693
 python3 --version || fail "python interpreter not found"
 
 # upgrade to modern pip so that it knows the flags we need.
-# we will then install a pinned version of pip as part of requirements-sdist-build
+# we will then install a pinned version of pip as part of requirements-build-sdist
 python3 -m pip install --upgrade pip
 
 info "Installing pinned requirements."
-python3 -m pip install --no-dependencies --no-warn-script-location -r "$CONTRIB"/deterministic-build/requirements-sdist-build.txt
+python3 -m pip install --no-dependencies --no-warn-script-location -r "$CONTRIB"/deterministic-build/requirements-build-sdist.txt
 
 
 "$CONTRIB"/make_packages || fail "make_packages failed"

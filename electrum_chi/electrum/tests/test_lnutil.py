@@ -15,6 +15,8 @@ from electrum.lnworker import LNWallet
 
 from . import ElectrumTestCase
 
+from .address_conversion import frombtc
+
 
 funding_tx_id = '8984484a580b825b9972d7adb15050b3ab624ccd731946b3eeddb92f4e7ef6be'
 funding_output_index = 0
@@ -808,7 +810,7 @@ class TestLNUtil(ElectrumTestCase):
         self.assertEqual(features, features.for_invoice())
 
     def test_lnworker_decode_channel_update_msg(self):
-        msg_without_prefix = bytes.fromhex("439b71c8ddeff63004e4ff1f9764a57dcf20232b79d9d669aef0e31c42be8e44208f7d868d0133acb334047f30e9399dece226ccd98e5df5330adf7f356290516fe28c0ab6f1b372c1a6a246ae63f74f931e8365e15a089c68d619000000000008762700054a00005ef2cf9c0101009000000000000003e80000000000000001000000002367b880")
+        msg_without_prefix = bytes.fromhex(frombtc("439b71c8ddeff63004e4ff1f9764a57dcf20232b79d9d669aef0e31c42be8e44208f7d868d0133acb334047f30e9399dece226ccd98e5df5330adf7f356290516fe28c0ab6f1b372c1a6a246ae63f74f931e8365e15a089c68d619000000000008762700054a00005ef2cf9c0101009000000000000003e80000000000000001000000002367b880"))
         # good messages
         self.assertNotEqual(
             None,
