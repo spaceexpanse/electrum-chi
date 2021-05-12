@@ -40,6 +40,10 @@ popd
 info "Compiling Namecoin-Qt forms..."
 ./contrib/make_qt_forms
 
+info "Copying www root..."
+rm -rf electrum_nmc/electrum/www
+cp -a electrum/www electrum_nmc/electrum/www
+
 find -exec touch -d '2000-11-11T11:11:11+00:00' {} +
 popd
 

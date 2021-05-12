@@ -118,6 +118,13 @@ pushd "$PROJECT_ROOT"
 popd
 
 
+info "Copying www root..."
+pushd "$PROJECT_ROOT"
+rm -rf electrum_nmc/electrum/www
+cp -a electrum/www electrum_nmc/electrum/www
+popd
+
+
 info "installing electrum-chi and its dependencies."
 mkdir -p "$CACHEDIR/pip_cache"
 "$python" -m pip install --no-dependencies --no-warn-script-location --cache-dir "$CACHEDIR/pip_cache" -r "$CONTRIB/deterministic-build/requirements.txt"

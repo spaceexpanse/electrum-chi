@@ -9,6 +9,13 @@ DISTDIR="$PROJECT_ROOT/dist"
 
 . "$CONTRIB"/build_tools_util.sh
 
+info "Compiling Namecoin-Qt forms..."
+./contrib/make_qt_forms
+
+info "Copying www root..."
+rm -rf electrum_nmc/electrum/www
+cp -a electrum/www electrum_nmc/electrum/www
+
 # note that at least py3.7 is needed, to have https://bugs.python.org/issue30693
 python3 --version || fail "python interpreter not found"
 

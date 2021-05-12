@@ -54,7 +54,6 @@ jobs:
       install: pip install flake8
       script: flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
     - stage: binary builds
-      if: (branch = master) OR (tag IS present)
       name: "Windows build"
       language: c
       python: false
@@ -67,8 +66,7 @@ jobs:
       script:
         - sudo docker run --name electrum-chi-wine-builder-cont -v $PWD:/opt/wine64/drive_c/electrum-chi --rm --workdir /opt/wine64/drive_c/electrum-chi/contrib/build-wine electrum-chi-wine-builder-img ./build.sh
       after_success: true
-    - if: (branch = master) OR (tag IS present)
-      name: "Android build"
+    - name: "Android build"
       language: python
       python: 3.7
       services:
@@ -87,8 +85,7 @@ jobs:
         - ls -la bin
         - if [ $(ls bin | grep -c Electrum-*) -eq 0 ]; then exit 1; fi
       after_success: true
-    - if: (branch = master) OR (tag IS present)
-      name: "MacOS build"
+    - name: "MacOS build"
       os: osx
       language: c
       env:
@@ -99,8 +96,7 @@ jobs:
       script: ./contrib/osx/make_osx
       after_script: ls -lah dist && md5 dist/*
       after_success: true
-    - if: (branch = master) OR (tag IS present)
-      name: "AppImage build"
+    - name: "AppImage build"
       language: c
       python: false
       services:
@@ -110,8 +106,7 @@ jobs:
       script:
         - sudo docker run --name electrum-chi-appimage-builder-cont -v $PWD:/opt/electrum-chi --rm --workdir /opt/electrum-chi/contrib/build-linux/appimage electrum-chi-appimage-builder-img ./build.sh
       after_success: true
-    - if: (branch = master) OR (tag IS present)
-      name: "tarball build"
+    - name: "tarball build"
       language: c
       python: false
       services:
@@ -120,15 +115,15 @@ jobs:
         # hack: travis already cloned the repo, but we re-clone now, as we need to have umask set BEFORE cloning
         - umask 0022
         - mkdir fresh_clone && cd fresh_clone
-        - git clone https://github.com/$TRAVIS_REPO_SLUG.git && cd electrum
+        - git clone https://github.com/$TRAVIS_REPO_SLUG.git && cd electrum-nmc
         - if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then git fetch origin pull/$TRAVIS_PULL_REQUEST/merge; fi
         - git checkout $TRAVIS_COMMIT
         - echo "Second git clone ready at $PWD"
       install:
-        - sudo docker build --no-cache -t electrum-sdist-builder-img ./contrib/build-linux/sdist/
+        - sudo docker build --no-cache -t electrum-nmc-sdist-builder-img ./contrib/build-linux/sdist/
       script:
         - echo "Building sdist at $PWD"
-        - sudo docker run --name electrum-sdist-builder-cont -v $PWD:/opt/electrum --rm --workdir /opt/electrum/contrib/build-linux/sdist electrum-sdist-builder-img ./build.sh
+        - sudo docker run --name electrum-nmc-sdist-builder-cont -v $PWD:/opt/electrum-nmc --rm --workdir /opt/electrum-nmc/contrib/build-linux/sdist electrum-nmc-sdist-builder-img ./build.sh
       after_success: true
     - stage: release check
       install:
