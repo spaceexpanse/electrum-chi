@@ -636,3 +636,28 @@ if [[ $1 == "name_registration" ]]; then
 
 
 fi
+
+if [[ $1 == "name_autoregister" ]]; then
+    # Expire any existing names from previous functional test runs.
+    new_blocks 35
+    wait_for_chain_sync "$alice"
+    echo "Perform name_new's.  Check for too long names exception."
+    #newA = node.name_new ("name-0")
+    $alice name_autoregister "name-0"
+    #newAconfl = node.name_new ("name-0")
+    # Skip this line for name_autoregister
+    #addr = node.getnewaddress ()
+    addr=$($alice add_request 0 | gojq -r .address)
+    echo $addr
+    #newB = node.name_new ("name-1", {"destAddress": addr})
+    $alice name_autoregister "name-1" --destination "$addr"
+    #node.name_new ("x" * 255)
+    $alice name_autoregister "$(printf %255s | tr ' ' 'x')"
+    #assert_raises_rpc_error (-8, 'name is too long', node.name_new, "x" * 256)
+    assert_raises_error "$alice name_autoregister $(printf %256s | tr ' ' 'x')" "identifier length 256 exceeds limit of 255"
+    #self.generateToOther (5)
+    new_blocks 5
+    wait_for_chain_sync "$alice"
+
+    echo "TODO: Finish these tests"
+fi

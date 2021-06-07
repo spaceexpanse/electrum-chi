@@ -59,6 +59,9 @@ class TestNamecoinABDefaultSeed(TestLightning):
     def test_name_registration(self):
         self.run_shell(['name_registration'])
 
+    def test_name_autoregister(self):
+        self.run_shell(['name_autoregister'])
+
 
 class TestNamecoinABSegwitSeed(TestNamecoinABDefaultSeed):
     create_opts = "--seed_type segwit"
