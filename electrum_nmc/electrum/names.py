@@ -23,7 +23,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from typing import Dict, Optional
+from typing import Dict, NamedTuple, Optional
 
 from . import constants
 
@@ -210,7 +210,19 @@ def identifier_to_namespace(identifier_bytes: bytes) -> Optional[str]:
 
     return namespace
 
+
+class FormattedNameIdentifier(NamedTuple):
+    category: str
+    specifics: str
+
+
 def format_name_identifier(identifier_bytes: bytes) -> str:
+    split = format_name_identifier_split(identifier_bytes)
+
+    return split.category + " " + split.specifics
+
+
+def format_name_identifier_split(identifier_bytes: bytes) -> FormattedNameIdentifier:
     try:
         identifier = identifier_bytes.decode("ascii")
     except UnicodeDecodeError:
@@ -227,28 +239,28 @@ def format_name_identifier(identifier_bytes: bytes) -> str:
     return format_name_identifier_unknown(identifier)
 
 
-def format_name_identifier_domain(identifier: str) -> str:
+def format_name_identifier_domain(identifier: str) -> FormattedNameIdentifier:
     label = identifier[len("d/"):]
 
-    return "Domain " + label + ".bit"
+    return FormattedNameIdentifier("Domain", label + ".bit")
 
 
-def format_name_identifier_identity(identifier: str) -> str:
+def format_name_identifier_identity(identifier: str) -> FormattedNameIdentifier:
     label = identifier[len("id/"):]
 
-    return "Identity " + label
+    return FormattedNameIdentifier("Identity", label)
 
 
-def format_name_identifier_unknown(identifier: str) -> str:
+def format_name_identifier_unknown(identifier: str) -> FormattedNameIdentifier:
     # Check for non-printable characters, and print ASCII if none are found.
     if identifier.isprintable():
-        return f"Non-standard name '{identifier}'"
+        return FormattedNameIdentifier("Non-standard name", f"'{identifier}'")
 
     return format_name_identifier_unknown_hex(identifier.encode("ascii"))
 
 
-def format_name_identifier_unknown_hex(identifier_bytes: bytes) -> str:
-    return "Non-standard name 0x" + bh2u(identifier_bytes)
+def format_name_identifier_unknown_hex(identifier_bytes: bytes) -> FormattedNameIdentifier:
+    return FormattedNameIdentifier("Non-standard name", "0x" + bh2u(identifier_bytes))
 
 
 def format_name_value(value_bytes: bytes) -> str:

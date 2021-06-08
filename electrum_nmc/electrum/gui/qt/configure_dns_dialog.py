@@ -131,9 +131,6 @@ class ConfigureDNSDialog(QDialog, MessageBoxMixin):
         self.ui.btnDeleteRecord.clicked.connect(self.delete_selected_records)
         self.ui.btnEditRecord.clicked.connect(self.edit_selected_record)
 
-        self.ui.dialogButtons.accepted.connect(self.accept)
-        self.ui.dialogButtons.rejected.connect(self.reject)
-
         self.accepted.connect(lambda: self.name_dialog.set_value(self.get_value()))
 
     def add_domain(self, domain):

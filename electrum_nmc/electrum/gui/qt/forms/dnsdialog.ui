@@ -1313,7 +1313,7 @@
    <item>
     <!-- TODO: Reconcile this with Namecoin Core's version (commented out below) -->
     <!-- TODO: Ask upstream Electrum to switch to QDialogButtonBox. -->
-    <widget class="QDialogButtonBox" name="dialogButtons">
+    <widget class="QDialogButtonBox" name="buttonBox">
      <property name="centerButtons">
       <bool>true</bool>
      </property>
@@ -1365,5 +1365,38 @@
   </customwidget>
  </customwidgets>
  <resources/>
- <connections/>
+ <connections>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>accepted()</signal>
+   <receiver>DNSDialog</receiver>
+   <slot>accept()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>248</x>
+     <y>254</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>157</x>
+     <y>274</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>rejected()</signal>
+   <receiver>DNSDialog</receiver>
+   <slot>reject()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>248</x>
+     <y>254</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>157</x>
+     <y>274</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
 </ui>
