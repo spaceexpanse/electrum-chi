@@ -944,7 +944,7 @@ class Commands:
         return tx.serialize()
 
     @command('wpn')
-    async def name_autoregister(self, identifier, value, destination=None, amount=0.0, fee=None, feerate=None, from_addr=None, from_coins=None, change_addr=None, nocheck=False, rbf=None, password=None, locktime=None, allow_existing=False, wallet: Abstract_Wallet = None):
+    async def name_autoregister(self, identifier, value="", destination=None, amount=0.0, fee=None, feerate=None, from_addr=None, from_coins=None, change_addr=None, nocheck=False, rbf=None, password=None, locktime=None, allow_existing=False, wallet: Abstract_Wallet = None):
         """Creates a name_new transaction, broadcasts it, creates a corresponding name_firstupdate transaction, and queues it. """
 
         # Validate the value before we try to pre-register the name.  That way,
@@ -988,7 +988,7 @@ class Commands:
             firstupdate_tx = await self.name_firstupdate(identifier,
                                                        new_rand,
                                                        new_txid,
-                                                       value,
+                                                       value=value,
                                                        destination=destination,
                                                        amount=amount,
                                                        fee=fee,
