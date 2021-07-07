@@ -68,7 +68,7 @@ class ConfigureDNSDialog(QDialog, MessageBoxMixin):
         Columns.DATA: _('Data'),
     }
 
-    TEXT_ADD_SUBDOMAIN = "Add Subdomain..."
+    TEXT_ADD_SUBDOMAIN = "Add Subdomain…"
 
     def __init__(self, value, parent):
         QDialog.__init__(self, parent=parent)
@@ -84,7 +84,7 @@ class ConfigureDNSDialog(QDialog, MessageBoxMixin):
         if self.name_dialog.namespace == "d":
             self.base_domain = identifier[len("d/"):] + ".bit"
         elif self.name_dialog.namespace == "dd":
-            self.base_domain = "(...).bit"
+            self.base_domain = "(…).bit"
         else:
             raise Exception("Identifier '" + identifier + "' is not d/ or dd/")
 
@@ -268,25 +268,7 @@ class ConfigureDNSDialog(QDialog, MessageBoxMixin):
         idx = model.rowCount()
 
         domain = self.get_selected_domain()
-        try:
-            tls = [
-                int(self.ui.editTLSCertUsage.text()),
-                int(self.ui.editTLSSelector.text()),
-                int(self.ui.editTLSMatchingType.text()),
-                self.ui.editTLSData.toPlainText(),
-            ]
-        except ValueError:
-            self.show_error(_("The Cert Usage, Selector, and Matching Type must be integers."))
-            return
-        try:
-            data = [
-                self.ui.editTLSProto.text(),
-                int(self.ui.editTLSPort.text()),
-                tls,
-            ]
-        except ValueError:
-            self.show_error(_("The Port must be an integer."))
-            return
+        data = self.ui.editTLSData.toPlainText()
 
         record = [domain, "tls", data]
 
@@ -436,7 +418,7 @@ class ConfigureDNSDialog(QDialog, MessageBoxMixin):
             formatted_data = json.dumps(data)
         elif record_type == "tls":
             formatted_record_type = "TLS"
-            formatted_data = json.dumps(data)
+            formatted_data = data
         elif record_type == "sshfp":
             formatted_record_type = "SSH"
             formatted_data = json.dumps(data)
@@ -548,28 +530,12 @@ class ConfigureDNSDialog(QDialog, MessageBoxMixin):
 
             self.force_one_tab(self.ui.tabDS)
         elif record_type == "tls":
-            protocol, port, tls = record_data
+            cert_data = record_data
 
-            port = str(port)
+            if not isinstance(cert_data, str):
+                self.show_error(_("Only DANE-TA Public Key TLS records can be edited."))
+                return
 
-            if type(tls) == dict:
-                if "dane" in tls:
-                    tls = tls["dane"]
-                else:
-                    self.show_error(_("Only DANE-formatted TLS records can be edited."))
-                    return
-
-            cert_usage, selector, matching_type, cert_data = tls
-
-            cert_usage = str(cert_usage)
-            selector = str(selector)
-            matching_type = str(matching_type)
-
-            self.ui.editTLSProto.setText(protocol)
-            self.ui.editTLSPort.setText(port)
-            self.ui.editTLSCertUsage.setText(cert_usage)
-            self.ui.editTLSSelector.setText(selector)
-            self.ui.editTLSMatchingType.setText(matching_type)
             self.ui.editTLSData.setPlainText(cert_data)
 
             self.force_one_tab(self.ui.tabTLS)
