@@ -614,7 +614,7 @@
        <item>
         <widget class="QLabel" name="labelTLSDesc">
          <property name="text">
-          <string>A TLS record authenticates TLS servers without a public certificate authority.  For compatibility with ncp11 (e.g. Tor Browser), leave all settings other than Certificate Association Data at their default.</string>
+          <string>A TLS record authenticates TLS servers without a public certificate authority.</string>
          </property>
          <property name="wordWrap">
           <bool>true</bool>
@@ -622,148 +622,9 @@
         </widget>
        </item>
        <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_15">
-         <item>
-          <layout class="QVBoxLayout" name="verticalLayout_25">
-           <item>
-            <widget class="QLabel" name="labelTLSProto">
-             <property name="maximumSize">
-              <size>
-               <width>16777215</width>
-               <height>20</height>
-              </size>
-             </property>
-             <property name="text">
-              <string>Proto</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QLineEdit" name="editTLSProto">
-             <property name="placeholderText">
-              <string>e.g., tcp</string>
-             </property>
-             <property name="text">
-              <string>tcp</string>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </item>
-         <item>
-          <layout class="QVBoxLayout" name="verticalLayout_18">
-           <item>
-            <widget class="QLabel" name="labelTLSPort">
-             <property name="maximumSize">
-              <size>
-               <width>16777215</width>
-               <height>20</height>
-              </size>
-             </property>
-             <property name="text">
-              <string>Port</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QLineEdit" name="editTLSPort">
-             <property name="placeholderText">
-              <string>e.g., 443</string>
-             </property>
-             <property name="text">
-              <string>443</string>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </item>
-         <item>
-          <layout class="QVBoxLayout" name="verticalLayout_13">
-           <item>
-            <widget class="QLabel" name="labelTLSCertUsage">
-             <property name="maximumSize">
-              <size>
-               <width>16777215</width>
-               <height>20</height>
-              </size>
-             </property>
-             <property name="text">
-              <string>Cert. Usage</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QValidatedLineEdit" name="editTLSCertUsage">
-             <property name="placeholderText">
-              <string>e.g., 2</string>
-             </property>
-             <property name="text">
-              <string>2</string>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </item>
-         <item>
-          <layout class="QVBoxLayout" name="verticalLayout_16">
-           <item>
-            <widget class="QLabel" name="labelTLSSelector">
-             <property name="maximumSize">
-              <size>
-               <width>16777215</width>
-               <height>20</height>
-              </size>
-             </property>
-             <property name="text">
-              <string>Selector</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QValidatedLineEdit" name="editTLSSelector">
-             <property name="placeholderText">
-              <string>e.g., 1</string>
-             </property>
-             <property name="text">
-              <string>1</string>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </item>
-         <item>
-          <layout class="QVBoxLayout" name="verticalLayout_17">
-           <item>
-            <widget class="QLabel" name="labelTLSMatchingType">
-             <property name="maximumSize">
-              <size>
-               <width>16777215</width>
-               <height>20</height>
-              </size>
-             </property>
-             <property name="text">
-              <string>Matching Type</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QValidatedLineEdit" name="editTLSMatchingType">
-             <property name="placeholderText">
-              <string>e.g., 0</string>
-             </property>
-             <property name="text">
-              <string>0</string>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </item>
-        </layout>
-       </item>
-       <item>
         <widget class="QLabel" name="label_24">
          <property name="text">
-          <string>Certificate Association Data (Base64)</string>
+          <string>DANE-TA Public Key (Base64)</string>
          </property>
         </widget>
        </item>
