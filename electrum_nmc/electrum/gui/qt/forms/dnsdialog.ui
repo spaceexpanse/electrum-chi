@@ -884,7 +884,10 @@
        <item>
         <widget class="QLabel" name="labelIMPORTDesc">
          <property name="text">
-          <string>Imports specified entries from another Namecoin name and merges with the current one. Optionally, import entries and associate them with a designated subdomain.</string>
+          <string>Imports specified entries from another Namecoin name and merges with the current one. Optionally, import entries and associate them with a designated subdomain.  &lt;a href="https://www.namecoin.org/docs/name-owners/delegated-alteration/"&gt;See the Delegated Alteration documentation for more details.&lt;/a&gt;</string>
+         </property>
+         <property name="openExternalLinks">
+          <bool>true</bool>
          </property>
          <property name="wordWrap">
           <bool>true</bool>
