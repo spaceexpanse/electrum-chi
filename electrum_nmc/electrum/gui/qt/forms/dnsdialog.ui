@@ -614,7 +614,10 @@
        <item>
         <widget class="QLabel" name="labelTLSDesc">
          <property name="text">
-          <string>A TLS record authenticates TLS servers without a public certificate authority.</string>
+          <string>A TLS record authenticates TLS servers without a public certificate authority.  TLS records are valid for &lt;code&gt;example.bit&lt;/code&gt; and all subdomains.  You can generate a TLS record via:&lt;br&gt;&lt;code&gt;generate_nmc_cert -use-ca -use-aia -host example.bit&lt;/code&gt;&lt;br&gt;&lt;a href="https://www.namecoin.org/docs/name-owners/tls/"&gt;See the TLS documentation for more details.&lt;/a&gt;</string>
+         </property>
+         <property name="openExternalLinks">
+          <bool>true</bool>
          </property>
          <property name="wordWrap">
           <bool>true</bool>

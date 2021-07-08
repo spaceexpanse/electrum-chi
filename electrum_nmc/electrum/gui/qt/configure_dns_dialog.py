@@ -88,6 +88,9 @@ class ConfigureDNSDialog(QDialog, MessageBoxMixin):
         else:
             raise Exception("Identifier '" + identifier + "' is not d/ or dd/")
 
+        # Fill in base domain in instructions.
+        self.ui.labelTLSDesc.setText(self.ui.labelTLSDesc.text().replace("example.bit", self.base_domain))
+
         subdomains = set([self.base_domain])
 
         records, self.extra_records = get_domain_records(self.base_domain, value)
@@ -267,7 +270,8 @@ class ConfigureDNSDialog(QDialog, MessageBoxMixin):
         model = self.ui.listDNSRecords.model()
         idx = model.rowCount()
 
-        domain = self.get_selected_domain()
+        # TLS records always use the base domain.
+        domain = self.base_domain
         data = self.ui.editTLSData.toPlainText()
 
         record = [domain, "tls", data]
