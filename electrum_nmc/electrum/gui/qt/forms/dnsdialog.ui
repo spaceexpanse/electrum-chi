@@ -461,7 +461,10 @@
        <item>
         <widget class="QLabel" name="labelDSDesc">
          <property name="text">
-          <string>DNSSEC fingerprints for securing the domain when used with DNS via NS. Format roughly mirrors RFC3658. </string>
+          <string>DNSSEC fingerprints for securing the domain when used with DNS via NS. Format roughly mirrors RFC3658.  &lt;a href="https://www.namecoin.org/docs/name-owners/dnssec/"&gt;See the DNSSEC documentation for more details.&lt;/a&gt;</string>
+         </property>
+         <property name="openExternalLinks">
+          <bool>true</bool>
          </property>
          <property name="wordWrap">
           <bool>true</bool>
