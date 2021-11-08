@@ -16,8 +16,8 @@ popd
 
 info "Copying www root..."
 pushd "$PROJECT_ROOT"
-rm -rf electrum_nmc/electrum/www
-cp -a electrum/www electrum_nmc/electrum/www
+rm -rf electrum_chi/electrum/www
+cp -a electrum/www electrum_chi/electrum/www
 popd
 
 # note that at least py3.7 is needed, to have https://bugs.python.org/issue30693

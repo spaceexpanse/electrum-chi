@@ -3,7 +3,7 @@
 set -eu -o pipefail
 shopt -s nullglob globstar
 
-if [ -d "./electrum_nmc" ]; then
+if [ -d "./electrum_chi" ]; then
     echo "Rebranding needed"
     exit 1
 fi
@@ -36,17 +36,17 @@ done
 
 EXCEPTIONS="--exclude=check_chi_rebranding --exclude=RELEASE-NOTES --exclude-dir=.git"
 
-if grep -r $EXCEPTIONS 'electrum_nmc\.icns' ./; then
+if grep -r $EXCEPTIONS 'electrum_chi\.icns' ./; then
     echo "Rebranding needed"
     exit 1
 fi
 
-if grep -r $EXCEPTIONS 'electrum_nmc\.ico' ./; then
+if grep -r $EXCEPTIONS 'electrum_chi\.ico' ./; then
     echo "Rebranding needed"
     exit 1
 fi
 
-if grep -r $EXCEPTIONS 'electrum_nmc\.png' ./; then
+if grep -r $EXCEPTIONS 'electrum_chi\.png' ./; then
     echo "Rebranding needed"
     exit 1
 fi

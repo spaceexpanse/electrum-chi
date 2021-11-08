@@ -41,10 +41,10 @@ contrib/secp256k1/
 contrib/zbar/
 
 # shared objects
-electrum_nmc/electrum/*.so
-electrum_nmc/electrum/*.so.0
-electrum_nmc/electrum/*.dll
-electrum_nmc/electrum/*.dylib
+electrum_chi/electrum/*.so
+electrum_chi/electrum/*.so.0
+electrum_chi/electrum/*.dll
+electrum_chi/electrum/*.dylib
 
 # Namecoin copy of www root
-electrum_nmc/electrum/www
+electrum_chi/electrum/www
