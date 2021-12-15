@@ -45,7 +45,7 @@ from . import bitcoin
 from .bitcoin import is_address,  hash_160, COIN
 from .bip32 import BIP32Node
 from .i18n import _
-from .names import build_name_commitment, build_name_new, format_name_identifier, name_expires_in, name_identifier_to_scripthash, OP_NAME_NEW, OP_NAME_FIRSTUPDATE, OP_NAME_UPDATE, validate_value_length
+from .names import build_name_commitment, build_name_new, format_name_identifier, name_expiration_datetime_estimate, name_identifier_to_scripthash, OP_NAME_NEW, OP_NAME_FIRSTUPDATE, OP_NAME_UPDATE, validate_value_length
 from .verifier import verify_tx_is_in_block
 from .transaction import (Transaction, multisig_script, TxOutput, PartialTransaction, PartialTxOutput,
                           tx_from_any, PartialTxInput, TxOutpoint)
@@ -418,9 +418,9 @@ class Commands:
             address = coin["address"]
 
             height = coin["height"]
-            chain_height = self.network.get_local_height()
+            local_chain_height = self.network.get_local_height()
 
-            expires_in = name_expires_in(height, chain_height)
+            expires_in, expires_time = name_expiration_datetime_estimate(height, local_chain_height, self.network.blockchain().header_at_tip()['timestamp'])
             expired = expires_in <= 0 if expires_in is not None else None
 
             is_mine = wallet.is_mine(address)
@@ -435,6 +435,7 @@ class Commands:
                 "address": address,
                 "height": height,
                 "expires_in": expires_in,
+                "expires_time": round(expires_time.timestamp()),
                 "expired": expired,
                 "ismine": is_mine,
             }
@@ -1486,6 +1487,8 @@ class Commands:
                     # the tx is now verified to represent the identifier at a
                     # safe height in the blockchain
 
+                    expires_in, expires_time = name_expiration_datetime_estimate(height, local_chain_height, self.network.blockchain().header_at_tip()['timestamp'])
+
                     is_mine = None
                     if wallet:
                         is_mine = wallet.is_mine(o.address)
@@ -1499,7 +1502,8 @@ class Commands:
                         "vout": idx,
                         "address": o.address,
                         "height": height,
-                        "expires_in": name_expires_in(height, local_chain_height),
+                        "expires_in": expires_in,
+                        "expires_time": round(expires_time.timestamp()),
                         "expired": False,
                         "ismine": is_mine,
                     }
