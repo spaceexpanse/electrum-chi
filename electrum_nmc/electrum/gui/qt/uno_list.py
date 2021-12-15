@@ -144,7 +144,9 @@ class UNOList(UTXOList):
             formatted_value = ''
 
         formatted_expires_in = ( _('Expires in %d blocks\nDate/time is only an estimate; do not rely on it!')%expires_in) if expires_in is not None else ''
-        formatted_expires_datetime = expires_datetime.isoformat(' ') if expires_datetime is not None else ''
+        # Copied from electrum.util.format_time.
+        # TODO: Patch upstream to avoid this code duplication.
+        formatted_expires_datetime = expires_datetime.isoformat(' ')[:-3] if expires_datetime is not None else ''
 
         txout = txid + ":%d"%vout
 
