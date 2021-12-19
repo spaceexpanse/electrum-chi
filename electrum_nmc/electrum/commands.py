@@ -751,7 +751,7 @@ class Commands:
 
     @command('wp')
     async def name_new(self, identifier=None, commitment=None, destination=None, amount=0.0, outputs=[], fee=None, feerate=None, from_addr=None, from_coins=None, change_addr=None, nocheck=False, unsigned=False, rbf=None, password=None, locktime=None, allow_existing=False, wallet: Abstract_Wallet = None):
-        """Create a name_new transaction. """
+        """Create a name pre-registration transaction. """
         self.nocheck = nocheck
 
         if identifier is None and commitment is None:
@@ -822,7 +822,7 @@ class Commands:
 
     @command('wp')
     async def name_firstupdate(self, identifier, salt=None, name_new_txid=None, value="", destination=None, amount=0.0, outputs=[], fee=None, feerate=None, from_addr=None, from_coins=None, change_addr=None, nocheck=False, unsigned=False, rbf=None, password=None, locktime=None, allow_early=False, wallet: Abstract_Wallet = None):
-        """Create a name_firstupdate transaction. """
+        """Create a name registration transaction. """
         self.nocheck = nocheck
         tx_fee = satoshis(fee)
         domain_addr = from_addr.split(',') if from_addr else None
@@ -909,7 +909,7 @@ class Commands:
 
     @command('wpn')
     async def name_update(self, identifier, value=None, destination=None, amount=0.0, outputs=[], fee=None, feerate=None, from_addr=None, from_coins=None, change_addr=None, nocheck=False, unsigned=False, rbf=None, password=None, locktime=None, wallet: Abstract_Wallet = None):
-        """Create a name_update transaction. """
+        """Create a name update transaction. """
 
         self.nocheck = nocheck
         tx_fee = satoshis(fee)
@@ -975,7 +975,7 @@ class Commands:
 
     @command('wpn')
     async def name_autoregister(self, identifier, value="", destination=None, amount=0.0, fee=None, feerate=None, from_addr=None, from_coins=None, change_addr=None, nocheck=False, rbf=None, password=None, locktime=None, allow_existing=False, wallet: Abstract_Wallet = None):
-        """Creates a name_new transaction, broadcasts it, creates a corresponding name_firstupdate transaction, and queues it. """
+        """Create a name pre-registration transaction, broadcast it, create a corresponding name registration transaction, and queue it. """
 
         # Validate the value before we try to pre-register the name.  That way,
         # if the value is invalid, we'll be able to cancel the registration
