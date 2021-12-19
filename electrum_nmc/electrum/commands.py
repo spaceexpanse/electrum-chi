@@ -750,10 +750,17 @@ class Commands:
         return tx.serialize()
 
     @command('wp')
-    async def name_new(self, identifier, destination=None, amount=0.0, outputs=[], fee=None, feerate=None, from_addr=None, from_coins=None, change_addr=None, nocheck=False, unsigned=False, rbf=None, password=None, locktime=None, allow_existing=False, wallet: Abstract_Wallet = None):
-        """Create a name_new transaction. """
+    async def name_new(self, identifier=None, commitment=None, destination=None, amount=0.0, outputs=[], fee=None, feerate=None, from_addr=None, from_coins=None, change_addr=None, nocheck=False, unsigned=False, rbf=None, password=None, locktime=None, allow_existing=False, wallet: Abstract_Wallet = None):
+        """Create a name pre-registration transaction. """
         self.nocheck = nocheck
-        if not allow_existing:
+
+        if identifier is None and commitment is None:
+            raise Exception("Must specify identifier or commitment")
+
+        if identifier is not None and commitment is not None:
+            raise Exception("Must not specify both identifier and commitment")
+
+        if identifier is not None and not allow_existing:
             name_exists = True
             try:
                 show = await self.name_show(identifier)
@@ -772,14 +779,23 @@ class Commands:
 
         # TODO: support non-ASCII encodings
         # TODO: enforce length limit on identifier
-        identifier_bytes = identifier.encode("ascii")
-        memo = "Pre-Registration: " + format_name_identifier(identifier_bytes)
+        if identifier is not None:
+            identifier_bytes = identifier.encode("ascii")
+            memo = "Pre-Registration: " + format_name_identifier(identifier_bytes)
+        else:
+            memo = "Pre-Registration: " + commitment
 
         if destination is None:
             request = await self.add_request(None, memo=memo, wallet=wallet)
             destination = request['address']
 
-        name_op, rand = build_name_new(identifier_bytes, address=destination, password=password, wallet=wallet)
+        if identifier is not None:
+            name_op, salt = build_name_new(identifier_bytes, address=destination, password=password, wallet=wallet)
+            salt_hex = bh2u(salt)
+            commitment = bh2u(name_op["commitment"])
+        else:
+            name_op, salt = {"op": OP_NAME_NEW, "commitment": bfh(commitment)}, None
+            salt_hex = None
 
         final_outputs = []
         for o_address, o_amount in outputs:
@@ -803,11 +819,11 @@ class Commands:
             rbf=rbf,
             password=password,
             locktime=locktime)
-        return {"tx": tx.serialize(), "txid": tx.txid(), "rand": bh2u(rand)}
+        return {"tx": tx.serialize(), "txid": tx.txid(), "salt": salt_hex, "commitment": commitment}
 
     @command('wp')
-    async def name_firstupdate(self, identifier, rand=None, name_new_txid=None, value="", destination=None, amount=0.0, outputs=[], fee=None, feerate=None, from_addr=None, from_coins=None, change_addr=None, nocheck=False, unsigned=False, rbf=None, password=None, locktime=None, allow_early=False, wallet: Abstract_Wallet = None):
-        """Create a name_firstupdate transaction. """
+    async def name_firstupdate(self, identifier, salt=None, name_new_txid=None, value="", destination=None, amount=0.0, outputs=[], fee=None, feerate=None, from_addr=None, from_coins=None, change_addr=None, nocheck=False, unsigned=False, rbf=None, password=None, locktime=None, allow_early=False, wallet: Abstract_Wallet = None):
+        """Create a name registration transaction. """
         self.nocheck = nocheck
         tx_fee = satoshis(fee)
         domain_addr = from_addr.split(',') if from_addr else None
@@ -817,11 +833,11 @@ class Commands:
 
         # TODO: support non-ASCII encodings
         # TODO: enforce length limits on identifier and value
-        # TODO: enforce exact length of rand
+        # TODO: enforce exact length of salt
         identifier_bytes = identifier.encode("ascii")
         value_bytes = value.encode("ascii")
 
-        if rand is None:
+        if salt is None:
             if name_new_txid is None:
                 txid_filter = None
             else:
@@ -841,18 +857,18 @@ class Commands:
 
                 # Calculate the salt
                 address = new_input.address
-                rand_bytes = wallet.name_salt(identifier_bytes, address, password)
+                salt_bytes = wallet.name_salt(identifier_bytes, address, password)
 
                 # Calculate the commitment, and check if it matches
-                commitment = build_name_commitment(identifier_bytes, rand_bytes)
-                if commitment == new_op["hash"]:
+                commitment = build_name_commitment(identifier_bytes, salt_bytes)
+                if commitment == new_op["commitment"]:
                     # We found the commitment.
                     name_new_txid = new_input.prevout.txid.hex()
                     break
             else:
                 raise NamePreRegistrationNotFound("name_new input with matching commitment not found")
         else:
-            rand_bytes = bfh(rand)
+            salt_bytes = bfh(salt)
 
         if not allow_early:
             conf = wallet.get_tx_height(name_new_txid).conf
@@ -860,7 +876,7 @@ class Commands:
                 remaining_conf = 12 - conf
                 raise NamePreRegistrationPendingError("The name pre-registration is still pending; wait " + str(remaining_conf) + " more blocks")
 
-        name_op = {"op": OP_NAME_FIRSTUPDATE, "name": identifier_bytes, "rand": rand_bytes, "value": value_bytes}
+        name_op = {"op": OP_NAME_FIRSTUPDATE, "name": identifier_bytes, "salt": salt_bytes, "value": value_bytes}
         memo = "Registration: " + format_name_identifier(identifier_bytes)
 
         if destination is None:
@@ -894,7 +910,7 @@ class Commands:
 
     @command('wpn')
     async def name_update(self, identifier, value=None, destination=None, amount=0.0, outputs=[], fee=None, feerate=None, from_addr=None, from_coins=None, change_addr=None, nocheck=False, unsigned=False, rbf=None, password=None, locktime=None, wallet: Abstract_Wallet = None):
-        """Create a name_update transaction. """
+        """Create a name update transaction. """
 
         self.nocheck = nocheck
         tx_fee = satoshis(fee)
@@ -960,7 +976,7 @@ class Commands:
 
     @command('wpn')
     async def name_autoregister(self, identifier, value="", destination=None, amount=0.0, fee=None, feerate=None, from_addr=None, from_coins=None, change_addr=None, nocheck=False, rbf=None, password=None, locktime=None, allow_existing=False, wallet: Abstract_Wallet = None):
-        """Creates a name_new transaction, broadcasts it, creates a corresponding name_firstupdate transaction, and queues it. """
+        """Create a name pre-registration transaction, broadcast it, create a corresponding name registration transaction, and queue it. """
 
         # Validate the value before we try to pre-register the name.  That way,
         # if the value is invalid, we'll be able to cancel the registration
@@ -982,7 +998,7 @@ class Commands:
                                    allow_existing=allow_existing,
                                    wallet=wallet)
         new_txid = new_result["txid"]
-        new_rand = new_result["rand"]
+        new_salt = new_result["salt"]
         new_tx = new_result["tx"]
 
         # We add the name_new transaction to the wallet explicitly because
@@ -1001,7 +1017,7 @@ class Commands:
 
         try:
             firstupdate_tx = await self.name_firstupdate(identifier,
-                                                       new_rand,
+                                                       new_salt,
                                                        new_txid,
                                                        value=value,
                                                        destination=destination,
@@ -1850,7 +1866,8 @@ command_options = {
     'value':       (None, "The value to assign to the name"),
     'name_encoding': (None, "Encoding for the name identifier ('ascii' or 'hex')"),
     'value_encoding': (None, "Encoding for the name value ('ascii' or 'hex')"),
-    'rand':        (None, "Salt for the name pre-registration commitment (returned by name_new; you can usually omit this)"),
+    'commitment':  (None, "Pre-registration commitment (use if you're pre-registering a name for someone else)"),
+    'salt':        (None, "Salt for the name pre-registration commitment (returned by name_new; you can usually omit this)"),
     'name_new_txid':(None, "Transaction ID for the name pre-registration (returned by name_new; you can usually omit this)"),
     'trigger_txid':(None, "Broadcast the transaction when this txid reaches the specified number of confirmations"),
     'trigger_name':(None, "Broadcast the transaction when this name reaches the specified number of confirmations"),

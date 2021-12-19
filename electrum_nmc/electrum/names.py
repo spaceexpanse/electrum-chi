@@ -34,16 +34,16 @@ def split_name_script(decoded):
         return {"name_op": None, "address_scriptPubKey": decoded}
 
     # name_new TxOuts look like:
-    # NAME_NEW (hash) 2DROP (Bitcoin TxOut)
+    # NAME_NEW (commitment) 2DROP (Bitcoin TxOut)
     match = [ OP_NAME_NEW, OPPushDataGeneric, opcodes.OP_2DROP ]
     if match_script_against_template(decoded[:len(match)], match):
-        return {"name_op": {"op": OP_NAME_NEW, "hash": decoded[1][1]}, "address_scriptPubKey": decoded[len(match):]}
+        return {"name_op": {"op": OP_NAME_NEW, "commitment": decoded[1][1]}, "address_scriptPubKey": decoded[len(match):]}
 
     # name_firstupdate TxOuts look like:
-    # NAME_FIRSTUPDATE (name) (rand) (value) 2DROP 2DROP (Bitcoin TxOut)
+    # NAME_FIRSTUPDATE (name) (salt) (value) 2DROP 2DROP (Bitcoin TxOut)
     match = [ OP_NAME_FIRSTUPDATE, OPPushDataGeneric, OPPushDataGeneric, OPPushDataGeneric, opcodes.OP_2DROP, opcodes.OP_2DROP ]
     if match_script_against_template(decoded[:len(match)], match):
-        return {"name_op": {"op": OP_NAME_FIRSTUPDATE, "name": decoded[1][1], "rand": decoded[2][1], "value": decoded[3][1]}, "address_scriptPubKey": decoded[len(match):]}
+        return {"name_op": {"op": OP_NAME_FIRSTUPDATE, "name": decoded[1][1], "salt": decoded[2][1], "value": decoded[3][1]}, "address_scriptPubKey": decoded[len(match):]}
 
     # name_update TxOuts look like:
     # NAME_UPDATE (name) (value) 2DROP DROP (Bitcoin TxOut)
@@ -68,13 +68,13 @@ def name_op_to_script(name_op) -> str:
     elif name_op["op"] == OP_NAME_NEW:
         validate_new_length(name_op)
         script = '51'                                 # OP_NAME_NEW
-        script += push_script(bh2u(name_op["hash"]))
+        script += push_script(bh2u(name_op["commitment"]))
         script += '6d'                                # OP_2DROP
     elif name_op["op"] == OP_NAME_FIRSTUPDATE:
         validate_firstupdate_length(name_op)
         script = '52'                                 # OP_NAME_FIRSTUPDATE
         script += push_script(bh2u(name_op["name"]))
-        script += push_script(bh2u(name_op["rand"]))
+        script += push_script(bh2u(name_op["salt"]))
         script += push_script(bh2u(name_op["value"]))
         script += '6d'                                # OP_2DROP
         script += '6d'                                # OP_2DROP
@@ -90,10 +90,10 @@ def name_op_to_script(name_op) -> str:
     return script
 
 def validate_new_length(name_op):
-    validate_hash_length(name_op["hash"])
+    validate_commitment_length(name_op["commitment"])
 
 def validate_firstupdate_length(name_op):
-    validate_rand_length(name_op["rand"])
+    validate_salt_length(name_op["salt"])
     validate_anyupdate_length(name_op)
 
 def validate_update_length(name_op):
@@ -103,19 +103,19 @@ def validate_anyupdate_length(name_op):
     validate_identifier_length(name_op["name"])
     validate_value_length(name_op["value"])
 
-def validate_hash_length(commitment):
-    hash_length_requirement = 20
+def validate_commitment_length(commitment):
+    commitment_length_requirement = 20
 
-    hash_length = len(commitment)
-    if hash_length != hash_length_requirement:
-        raise BitcoinException('hash length {} is not equal to requirement of {}'.format(hash_length, hash_length_requirement))
+    commitment_length = len(commitment)
+    if commitment_length != commitment_length_requirement:
+        raise BitcoinException('commitment length {} is not equal to requirement of {}'.format(commitment_length, commitment_length_requirement))
 
-def validate_rand_length(rand):
-    rand_length_requirement = 20
+def validate_salt_length(salt):
+    salt_length_requirement = 20
 
-    rand_length = len(rand)
-    if rand_length != rand_length_requirement:
-        raise BitcoinException('rand length {} is not equal to requirement of {}'.format(rand_length, rand_length_requirement))
+    salt_length = len(salt)
+    if salt_length != salt_length_requirement:
+        raise BitcoinException('salt length {} is not equal to requirement of {}'.format(salt_length, salt_length_requirement))
 
 def validate_identifier_length(identifier):
     identifier_length_limit = 255
@@ -131,22 +131,22 @@ def validate_value_length(value):
     if value_length > value_length_limit:
         raise BitcoinException('value length {} exceeds limit of {}'.format(value_length, value_length_limit))
 
-def build_name_new(identifier, rand = None, address = None, password = None, wallet = None):
+def build_name_new(identifier, salt = None, address = None, password = None, wallet = None):
     validate_identifier_length(identifier)
 
     if address is not None and wallet is not None:
-        rand = wallet.name_salt(identifier, address, password)
+        salt = wallet.name_salt(identifier, address, password)
 
-    if rand is None:
-        rand = os.urandom(20)
+    if salt is None:
+        salt = os.urandom(20)
 
-    commitment = build_name_commitment(identifier, rand)
+    commitment = build_name_commitment(identifier, salt)
 
-    return {"op": OP_NAME_NEW, "hash": commitment}, rand
+    return {"op": OP_NAME_NEW, "commitment": commitment}, salt
 
 def build_name_commitment(identifier: bytes, salt: bytes) -> bytes:
-    to_hash = salt + identifier
-    commitment = hash_160(to_hash)
+    preimage = salt + identifier
+    commitment = hash_160(preimage)
 
     return commitment
 
@@ -282,19 +282,19 @@ def format_name_value_hex(value_bytes: bytes) -> str:
 def format_name_op(name_op) -> str:
     if name_op is None:
         return ''
-    if "hash" in name_op:
-        formatted_hash = "Commitment = " + bh2u(name_op["hash"])
-    if "rand" in name_op:
-        formatted_rand = "Salt = " + bh2u(name_op["rand"])
+    if "commitment" in name_op:
+        formatted_commitment = "Commitment = " + bh2u(name_op["commitment"])
+    if "salt" in name_op:
+        formatted_salt = "Salt = " + bh2u(name_op["salt"])
     if "name" in name_op:
         formatted_name = "Name = " + format_name_identifier(name_op["name"])
     if "value" in name_op:
         formatted_value = "Data = " + format_name_value(name_op["value"])
 
     if name_op["op"] == OP_NAME_NEW:
-        return "\tPre-Registration\n\t\t" + formatted_hash
+        return "\tPre-Registration\n\t\t" + formatted_commitment
     if name_op["op"] == OP_NAME_FIRSTUPDATE:
-        return "\tRegistration\n\t\t" + formatted_name + "\n\t\t" + formatted_rand + "\n\t\t" + formatted_value
+        return "\tRegistration\n\t\t" + formatted_name + "\n\t\t" + formatted_salt + "\n\t\t" + formatted_value
     if name_op["op"] == OP_NAME_UPDATE:
         return "\tUpdate\n\t\t" + formatted_name + "\n\t\t" + formatted_value
 
@@ -310,10 +310,10 @@ def name_op_to_json(name_op: Dict) -> Dict[str, str]:
 
     result["op"] = op_str[result["op"]]
 
-    if "hash" in result:
-        result["hash"] = result["hash"].hex()
-    if "rand" in result:
-        result["rand"] = result["rand"].hex()
+    if "commitment" in result:
+        result["commitment"] = result["commitment"].hex()
+    if "salt" in result:
+        result["salt"] = result["salt"].hex()
     if "name" in result:
         result["name"] = result["name"].hex()
         result["name_encoding"] = "hex"
