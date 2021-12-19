@@ -102,6 +102,7 @@ class BitcoinMainnet(AbstractNet):
     AUXPOW_START_HEIGHT = 19200
 
     NAME_EXPIRATION = 36000
+    NAME_SUSPENSION = NAME_EXPIRATION - 2 * 2016
 
 
 class BitcoinTestnet(AbstractNet):
@@ -140,6 +141,7 @@ class BitcoinTestnet(AbstractNet):
     AUXPOW_START_HEIGHT = 0
 
     NAME_EXPIRATION = 36000
+    NAME_SUSPENSION = NAME_EXPIRATION - 2 * 2016
 
 
 class BitcoinRegtest(BitcoinTestnet):
@@ -151,6 +153,7 @@ class BitcoinRegtest(BitcoinTestnet):
     LN_DNS_SEEDS = []
 
     NAME_EXPIRATION = 30
+    NAME_SUSPENSION = NAME_EXPIRATION - 2 * 2
 
 
 class BitcoinSimnet(BitcoinTestnet):

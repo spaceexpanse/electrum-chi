@@ -505,8 +505,11 @@ def name_expires_in(name_height: Optional[int], chain_height) -> Optional[int]:
     # Names expire at 36001 confirmations.
     return blocks_remaining_until_confirmations(name_height, chain_height, constants.net.NAME_EXPIRATION + 1)
 
-def name_expiration_datetime_estimate(name_height: Optional[int], chain_height, chain_unixtime):
-    expiration_blocks = name_expires_in(name_height, chain_height)
+def name_suspends_in(name_height: Optional[int], chain_height) -> Optional[int]:
+    return blocks_remaining_until_confirmations(name_height, chain_height, constants.net.NAME_SUSPENSION + 1)
+
+def name_expiration_datetime_estimate(name_height: Optional[int], chain_height, chain_unixtime, blocks_func = name_expires_in):
+    expiration_blocks = blocks_func(name_height, chain_height)
 
     if expiration_blocks is None:
         return None, None
