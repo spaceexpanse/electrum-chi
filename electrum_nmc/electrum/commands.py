@@ -845,7 +845,7 @@ class Commands:
 
                 # Calculate the commitment, and check if it matches
                 commitment = build_name_commitment(identifier_bytes, salt_bytes)
-                if commitment == new_op["hash"]:
+                if commitment == new_op["commitment"]:
                     # We found the commitment.
                     name_new_txid = new_input.prevout.txid.hex()
                     break
