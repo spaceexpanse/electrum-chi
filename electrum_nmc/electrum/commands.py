@@ -792,6 +792,7 @@ class Commands:
         if identifier is not None:
             name_op, salt = build_name_new(identifier_bytes, address=destination, password=password, wallet=wallet)
             salt_hex = bh2u(salt)
+            commitment = bh2u(name_op["commitment"])
         else:
             name_op, salt = {"op": OP_NAME_NEW, "commitment": bfh(commitment)}, None
             salt_hex = None
@@ -818,7 +819,7 @@ class Commands:
             rbf=rbf,
             password=password,
             locktime=locktime)
-        return {"tx": tx.serialize(), "txid": tx.txid(), "salt": salt_hex}
+        return {"tx": tx.serialize(), "txid": tx.txid(), "salt": salt_hex, "commitment": commitment}
 
     @command('wp')
     async def name_firstupdate(self, identifier, salt=None, name_new_txid=None, value="", destination=None, amount=0.0, outputs=[], fee=None, feerate=None, from_addr=None, from_coins=None, change_addr=None, nocheck=False, unsigned=False, rbf=None, password=None, locktime=None, allow_early=False, wallet: Abstract_Wallet = None):
