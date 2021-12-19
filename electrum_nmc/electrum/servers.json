@@ -1,4 +1,9 @@
 {
+    "188.167.144.126": {
+        "pruning": "-",
+        "s": "50002",
+        "version": "1.4"
+    },
     "195.135.194.10": {
         "pruning": "-",
         "s": "50002",
@@ -37,6 +42,11 @@
     "2001:678:7dc:13::2": {
         "pruning": "-",
         "s": "50002",
+        "version": "1.4"
+    },
+    "46.229.238.187": {
+        "pruning": "-",
+        "s": "57002",
         "version": "1.4"
     },
     "7mqrrbm6xgdle4bau3s3vo63eqilxetjshahtx5z44nhvcrepbfiwtyd.onion": {
@@ -87,6 +97,11 @@
     "nmc.bitcoins.sk": {
         "pruning": "-",
         "s": "50002",
+        "version": "1.4"
+    },
+    "nmc2.bitcoins.sk": {
+        "pruning": "-",
+        "s": "57002",
         "version": "1.4"
     },
     "t3ts346cpsdbqjkcvyveqfgldtipoco5yzxqs6sted6y4fgsgasnp3ad.onion": {
