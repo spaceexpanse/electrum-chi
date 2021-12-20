@@ -32,6 +32,7 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QStandardItemModel, QStandardItem, QFont
 from PyQt5.QtWidgets import QAbstractItemView, QMenu
 
+from electrum import constants
 from electrum.commands import NameUpdatedTooRecentlyError
 from electrum.i18n import _
 from electrum.names import blocks_remaining_until_confirmations, format_name_identifier, format_name_value, get_queued_firstupdate_from_new, name_expiration_datetime_estimate, name_suspends_in, OP_NAME_UPDATE
@@ -121,7 +122,14 @@ class UNOList(UTXOList):
 
             if height is not None and height > 0:
                 # utxo is confirmed
-                status = ''
+                if expires_in is not None and expires_in <= 0:
+                    status = _('Expired')
+                elif suspends_in is not None and suspends_in <= 0:
+                    status = _('Suspended')
+                elif suspends_in is not None and suspends_in <= constants.net.NAME_EXPIRATION - constants.net.NAME_SUSPENSION:
+                    status = _('Suspending Soon')
+                else:
+                    status = _('Confirmed')
             else:
                 # utxo is unconfirmed
                 if name_op['op'] == OP_NAME_UPDATE:
