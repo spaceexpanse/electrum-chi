@@ -113,8 +113,8 @@ class UNOList(UTXOList):
         else:
             # utxo is name_anyupdate
             if header_at_tip is not None:
-                expires_in, expires_datetime = name_expiration_datetime_estimate(height_estimated, header_at_tip['block_height'], header_at_tip['timestamp'])
-                suspends_in, suspends_datetime = name_expiration_datetime_estimate(height_estimated, header_at_tip['block_height'], header_at_tip['timestamp'], blocks_func=name_suspends_in)
+                expires_in, expires_datetime = name_expiration_datetime_estimate(height_estimated, self.network.blockchain())
+                suspends_in, suspends_datetime = name_expiration_datetime_estimate(height_estimated, self.network.blockchain(), blocks_func=name_suspends_in)
             else:
                 expires_in, expires_datetime = None, None
                 suspends_in, suspends_datetime = None, None

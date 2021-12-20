@@ -426,10 +426,10 @@ class Commands:
             height = coin["height"]
             local_chain_height = self.network.get_local_height()
 
-            expires_in, expires_time = name_expiration_datetime_estimate(height, local_chain_height, self.network.blockchain().header_at_tip()['timestamp'])
+            expires_in, expires_time = name_expiration_datetime_estimate(height, self.network.blockchain())
             expired = expires_in <= 0 if expires_in is not None else None
 
-            suspends_in, suspends_time = name_expiration_datetime_estimate(height, local_chain_height, self.network.blockchain().header_at_tip()['timestamp'], blocks_func=name_suspends_in)
+            suspends_in, suspends_time = name_expiration_datetime_estimate(height, self.network.blockchain(), blocks_func=name_suspends_in)
             suspended = suspends_in <= 0 if suspends_in is not None else None
 
             is_mine = wallet.is_mine(address)
@@ -1531,9 +1531,9 @@ class Commands:
                     # the tx is now verified to represent the identifier at a
                     # safe height in the blockchain
 
-                    expires_in, expires_time = name_expiration_datetime_estimate(height, local_chain_height, self.network.blockchain().header_at_tip()['timestamp'])
+                    expires_in, expires_time = name_expiration_datetime_estimate(height, self.network.blockchain())
 
-                    suspends_in, suspends_time = name_expiration_datetime_estimate(height, local_chain_height, self.network.blockchain().header_at_tip()['timestamp'], blocks_func=name_suspends_in)
+                    suspends_in, suspends_time = name_expiration_datetime_estimate(height, self.network.blockchain(), blocks_func=name_suspends_in)
 
                     is_mine = None
                     if wallet:
