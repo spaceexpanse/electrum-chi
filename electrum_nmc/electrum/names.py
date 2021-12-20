@@ -508,15 +508,27 @@ def name_expires_in(name_height: Optional[int], chain_height) -> Optional[int]:
 def name_suspends_in(name_height: Optional[int], chain_height) -> Optional[int]:
     return blocks_remaining_until_confirmations(name_height, chain_height, constants.net.NAME_SUSPENSION + 1)
 
-def name_expiration_datetime_estimate(name_height: Optional[int], chain_height, chain_unixtime, blocks_func = name_expires_in):
+def name_expiration_datetime_estimate(name_height: Optional[int], chain, blocks_func = name_expires_in):
+    chain_height = chain.header_at_tip()['block_height']
+
     expiration_blocks = blocks_func(name_height, chain_height)
 
     if expiration_blocks is None:
         return None, None
 
+    # Try getting the exact timestamp.  This will fail if the header isn't
+    # available or is in the future.
+    expiration_height = chain_height + expiration_blocks
+    expiration_header = chain.read_header(expiration_height)
+    if expiration_header is not None:
+        expiration_datetime = datetime.fromtimestamp(expiration_header['timestamp'])
+        return expiration_blocks, expiration_datetime
+
+    # Exact timestamp isn't available, so estimate it via 10-minute block
+    # interval and chain tip timestamp.
     block_timedelta = timedelta(minutes=10)
     expiration_timedelta = expiration_blocks * block_timedelta
-    chain_datetime = datetime.fromtimestamp(chain_unixtime)
+    chain_datetime = datetime.fromtimestamp(chain.header_at_tip()['timestamp'])
     return expiration_blocks, chain_datetime + expiration_timedelta
 
 def get_domain_records(domain, value):
