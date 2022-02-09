@@ -1471,7 +1471,7 @@ class Commands:
         if unmined_tx_exists:
             raise NameUnconfirmedError('Name is purportedly unconfirmed (registration height {}, latest verified height {})'.format(unmined_tx_height, unverified_height))
         if semi_expired_tx_exists:
-            raise NameSemiExpiredError("Name is purportedly semi-expired (latest renewal height {}, latest un-semi-expired height {})".format(semi_expired_tx_height, un_semi_expired_height))
+            raise NameSemiExpiredError("Name is purportedly semi-expired (latest renewal height {}, latest un-semi-expired height {}); if this name is yours, renew it ASAP to restore resolution and avoid losing ownership of the name".format(semi_expired_tx_height, un_semi_expired_height))
         if expired_tx_exists:
             raise NameExpiredError("Name is purportedly expired (latest renewal height {}, latest unexpired height {})".format(expired_tx_height, unexpired_height))
         if tx_best is None:

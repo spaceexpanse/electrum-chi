@@ -89,6 +89,8 @@ class UNOList(UTXOList):
         else:
             height_estimated = height
 
+        status_tooltip = None
+
         if 'name' not in name_op:
             # utxo is name_new
             queue_item, firstupdate_output = get_queued_firstupdate_from_new(self.wallet, txid, vout)
@@ -126,8 +128,10 @@ class UNOList(UTXOList):
                     status = _('Expired')
                 elif semi_expires_in is not None and semi_expires_in <= 0:
                     status = _('Semi-Expired')
+                    status_tooltip = _('This name has stopped resolving because it was not renewed on time.  Renew it ASAP to restore resolution and avoid losing ownership of the name.')
                 elif semi_expires_in is not None and semi_expires_in <= constants.net.NAME_EXPIRATION - constants.net.NAME_SEMI_EXPIRATION:
                     status = _('Semi-Expiring Soon')
+                    status_tooltip = _('This name will stop resolving soon if it is not renewed.  Renew it ASAP to keep it resolving.')
                 else:
                     status = _('Confirmed')
             else:
@@ -176,6 +180,8 @@ class UNOList(UTXOList):
         utxo_item[self.Columns.NAME].setData(value, Qt.UserRole + USER_ROLE_VALUE)
 
         utxo_item[self.Columns.SEMI_EXPIRES_IN].setToolTip(formatted_expires_in)
+        if status_tooltip is not None:
+            utxo_item[self.Columns.STATUS].setToolTip(status_tooltip)
 
         address = utxo.address
         if self.wallet.is_frozen_address(address) or self.wallet.is_frozen_coin(utxo):
