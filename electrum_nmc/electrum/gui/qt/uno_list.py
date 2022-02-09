@@ -35,7 +35,7 @@ from PyQt5.QtWidgets import QAbstractItemView, QMenu
 from electrum import constants
 from electrum.commands import NameUpdatedTooRecentlyError
 from electrum.i18n import _
-from electrum.names import blocks_remaining_until_confirmations, format_name_identifier, format_name_value, get_queued_firstupdate_from_new, name_expiration_datetime_estimate, name_suspends_in, OP_NAME_UPDATE
+from electrum.names import blocks_remaining_until_confirmations, format_name_identifier, format_name_value, get_queued_firstupdate_from_new, name_expiration_datetime_estimate, name_semi_expires_in, OP_NAME_UPDATE
 from electrum.transaction import PartialTxInput
 from electrum.util import NotEnoughFunds, NoDynamicFeeEstimates, bh2u
 from electrum.wallet import InternalAddressCorruption
@@ -54,13 +54,13 @@ class UNOList(UTXOList):
     class Columns(IntEnum):
         NAME = 0
         VALUE = 1
-        SUSPENDS_IN = 2
+        SEMI_EXPIRES_IN = 2
         STATUS = 3
 
     headers = {
         Columns.NAME: _('Name'),
         Columns.VALUE: _('Value'),
-        Columns.SUSPENDS_IN: _('Suspends (Est.)'),
+        Columns.SEMI_EXPIRES_IN: _('Semi-Expires (Est.)'),
         Columns.STATUS: _('Status'),
     }
     filter_columns = [Columns.NAME, Columns.VALUE]
@@ -96,7 +96,7 @@ class UNOList(UTXOList):
                 if firstupdate_output.name_op is not None:
                     name_op = firstupdate_output.name_op
             expires_in, expires_datetime = None, None
-            suspends_in, suspends_datetime = None, None
+            semi_expires_in, semi_expires_datetime = None, None
 
             if height is not None and header_at_tip is not None and queue_item is not None:
                 sendwhen_depth = queue_item["sendWhen"]["confirmations"]
@@ -115,19 +115,19 @@ class UNOList(UTXOList):
             # utxo is name_anyupdate
             if header_at_tip is not None:
                 expires_in, expires_datetime = name_expiration_datetime_estimate(height_estimated, self.network.blockchain())
-                suspends_in, suspends_datetime = name_expiration_datetime_estimate(height_estimated, self.network.blockchain(), blocks_func=name_suspends_in)
+                semi_expires_in, semi_expires_datetime = name_expiration_datetime_estimate(height_estimated, self.network.blockchain(), blocks_func=name_semi_expires_in)
             else:
                 expires_in, expires_datetime = None, None
-                suspends_in, suspends_datetime = None, None
+                semi_expires_in, semi_expires_datetime = None, None
 
             if height is not None and height > 0:
                 # utxo is confirmed
                 if expires_in is not None and expires_in <= 0:
                     status = _('Expired')
-                elif suspends_in is not None and suspends_in <= 0:
-                    status = _('Suspended')
-                elif suspends_in is not None and suspends_in <= constants.net.NAME_EXPIRATION - constants.net.NAME_SUSPENSION:
-                    status = _('Suspending Soon')
+                elif semi_expires_in is not None and semi_expires_in <= 0:
+                    status = _('Semi-Expired')
+                elif semi_expires_in is not None and semi_expires_in <= constants.net.NAME_EXPIRATION - constants.net.NAME_SEMI_EXPIRATION:
+                    status = _('Semi-Expiring Soon')
                 else:
                     status = _('Confirmed')
             else:
@@ -157,14 +157,14 @@ class UNOList(UTXOList):
         # Copied from electrum.util.format_time.
         # TODO: Patch upstream to avoid this code duplication.
         formatted_expires_datetime = expires_datetime.isoformat(' ')[:-3] if expires_datetime is not None else ''
-        formatted_suspends_datetime = suspends_datetime.isoformat(' ')[:-3] if suspends_datetime is not None else ''
-        formatted_expires_in = ( _('Suspends in %d blocks\nExpires %s (in %d blocks)\nDate/time is only an estimate; do not rely on it!')%(suspends_in, formatted_expires_datetime, expires_in)) if expires_in is not None else ''
+        formatted_semi_expires_datetime = semi_expires_datetime.isoformat(' ')[:-3] if semi_expires_datetime is not None else ''
+        formatted_expires_in = ( _('Semi-Expires in %d blocks\nExpires %s (in %d blocks)\nDate/time is only an estimate; do not rely on it!')%(semi_expires_in, formatted_expires_datetime, expires_in)) if expires_in is not None else ''
 
         txout = txid + ":%d"%vout
 
         self._utxo_dict[txout] = utxo
 
-        labels = [formatted_name, formatted_value, formatted_suspends_datetime, status]
+        labels = [formatted_name, formatted_value, formatted_semi_expires_datetime, status]
         utxo_item = [QStandardItem(x) for x in labels]
         self.set_editability(utxo_item)
 
@@ -175,7 +175,7 @@ class UNOList(UTXOList):
         utxo_item[self.Columns.NAME].setData(name, Qt.UserRole + USER_ROLE_NAME)
         utxo_item[self.Columns.NAME].setData(value, Qt.UserRole + USER_ROLE_VALUE)
 
-        utxo_item[self.Columns.SUSPENDS_IN].setToolTip(formatted_expires_in)
+        utxo_item[self.Columns.SEMI_EXPIRES_IN].setToolTip(formatted_expires_in)
 
         address = utxo.address
         if self.wallet.is_frozen_address(address) or self.wallet.is_frozen_coin(utxo):
