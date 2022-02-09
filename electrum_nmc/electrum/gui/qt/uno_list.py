@@ -110,7 +110,7 @@ class UNOList(UTXOList):
 
                 minutes_remaining_until_firstupdate_confirmed = 10 * blocks_until_firstupdate_confirmed
 
-                status = _('Registration Pending, ETA ') + str(minutes_remaining_until_firstupdate_confirmed) + _("min")
+                status = _('Registration Pending, ETA %dmin')%minutes_remaining_until_firstupdate_confirmed
             else:
                 status = _('Registration Pending')
         else:
@@ -143,7 +143,7 @@ class UNOList(UTXOList):
                     # utxo is name_firstupdate
                     # TODO: Namecoin: Take into account the fact that
                     # transactions may not be mined in the next block.
-                    status = _('Registration Pending, ETA 10min')
+                    status = _('Registration Pending, ETA %dmin')%10
 
         if 'name' in name_op:
             # utxo is name_anyupdate or a name_new that we've queued a name_firstupdate for
@@ -312,7 +312,7 @@ class UNOList(UTXOList):
                 broadcast(tx)
             except Exception as e:
                 formatted_name = format_name_identifier(identifier)
-                self.parent.show_error(_("Error broadcasting renewal for ") + formatted_name + ": " + str(e))
+                self.parent.show_error(_("Error broadcasting renewal for %s: %s")%(formatted_name, str(e)))
                 continue
 
             # We add the transaction to the wallet explicitly because
@@ -324,7 +324,7 @@ class UNOList(UTXOList):
             status = addtransaction(tx)
             if not status:
                 formatted_name = format_name_identifier(identifier)
-                self.parent.show_error(_("Error adding renewal for ") + formatted_name + _(" to wallet"))
+                self.parent.show_error(_("Error adding renewal for %s to wallet")%formatted_name)
                 continue
 
     def configure_selected_item(self):
