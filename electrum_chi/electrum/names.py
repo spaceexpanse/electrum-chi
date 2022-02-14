@@ -23,7 +23,7 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from typing import Dict, Optional
+from typing import Dict, NamedTuple, Optional
 
 from . import constants
 
@@ -175,7 +175,19 @@ def identifier_to_namespace(identifier_bytes: bytes) -> Optional[str]:
 
     return namespace
 
+
+class FormattedNameIdentifier(NamedTuple):
+    category: str
+    specifics: str
+
+
 def format_name_identifier(identifier_bytes: bytes) -> str:
+    split = format_name_identifier_split(identifier_bytes)
+
+    return split.category + " " + split.specifics
+
+
+def format_name_identifier_split(identifier_bytes: bytes) -> FormattedNameIdentifier:
     try:
         identifier = identifier_bytes.decode("utf-8")
     except UnicodeDecodeError:
@@ -194,24 +206,24 @@ def format_name_identifier(identifier_bytes: bytes) -> str:
 
 def format_name_identifier_player(identifier):
     label = identifier[len("p/"):]
-    return "Player: " + label
+    return FormattedNameIdentifier("Player", label)
 
 
 def format_name_identifier_game(identifier):
     label = identifier[len("g/"):]
-    return "Game: " + label
+    return FormattedNameIdentifier("Game", label)
 
 
-def format_name_identifier_unknown(identifier: str) -> str:
+def format_name_identifier_unknown(identifier: str) -> FormattedNameIdentifier:
     # Check for non-printable characters, and print ASCII if none are found.
     if identifier.isprintable():
-        return f"Non-standard name '{identifier}'"
+        return FormattedNameIdentifier("Non-standard name", f"'{identifier}'")
 
     return format_name_identifier_unknown_hex(identifier.encode("ascii"))
 
 
-def format_name_identifier_unknown_hex(identifier_bytes: bytes) -> str:
-    return "Non-standard name 0x" + bh2u(identifier_bytes)
+def format_name_identifier_unknown_hex(identifier_bytes: bytes) -> FormattedNameIdentifier:
+    return FormattedNameIdentifier("Non-standard name", "0x" + bh2u(identifier_bytes))
 
 
 def format_name_value(value_bytes: bytes) -> str:
@@ -702,12 +714,15 @@ def get_domain_records_ds_single(domain, value):
     return [domain, "ds", value], None
 
 def get_domain_records_tls(domain, value):
-    # Handle TLS subdomain
+    # Handle TLS subdomain; domain must be eTLD+2
     try:
-        port, protocol, domain = domain.split(".", 2)
-        port = port[1:]
-        protocol = protocol[1:]
-    except IndexError:
+        wildcard, sld, tld = domain.split(".")
+        domain = sld + "." + tld
+    except ValueError:
+        return [], value
+
+    # Must be "*" subdomain of eTLD+1
+    if wildcard != "*":
         return [], value
 
     # Must be array
@@ -718,7 +733,7 @@ def get_domain_records_tls(domain, value):
     records = []
     remaining = []
     for raw_address in value:
-        single_record, single_remaining = get_domain_records_tls_single(domain, raw_address, protocol, port)
+        single_record, single_remaining = get_domain_records_tls_single(domain, raw_address)
         if single_record is not None:
             records.append(single_record)
         if single_remaining is not None:
@@ -726,13 +741,7 @@ def get_domain_records_tls(domain, value):
 
     return records, remaining
 
-def get_domain_records_tls_single(domain, value, protocol, port):
-    # Port must be an integer
-    try:
-        port = int(port)
-    except ValueError:
-        return None, value
-
+def get_domain_records_tls_single(domain, value):
     # Convert array to dict (default DANE format)
     if type(value) == list:
         value = {"dane": value}
@@ -747,30 +756,22 @@ def get_domain_records_tls_single(domain, value, protocol, port):
         return None, value
 
     # Check format
-    if "dane" in value:
-        cert = value["dane"]
-        if type(cert) != list:
-            return None, value
-        if len(cert) != 4:
-            return None, value
-        if type(cert[0]) != int or type(cert[1]) != int or type(cert[2]) != int or type(cert[3]) != str:
-            return None, value
-    # TODO: enable Dehydrated format by uncommenting the below code.  We need
-    # to finish the GUI first.
-    #elif "d8" in value:
-    #    cert = value["d8"]
-    #    if type(cert) != list:
-    #        return None, value
-    #    if len(cert) != 6:
-    #        return None, value
-    #    if cert[0] != 1:
-    #        return None, value
-    #    if type(cert[1]) != str or type(cert[2]) != int or type(cert[3]) != int or type(cert[4]) != int or type(cert[5]) != str:
-    #        return None, value
-    else:
+    if "dane" not in value:
         return None, value
 
-    return [domain, "tls", [protocol, port, value]], None
+    cert = value["dane"]
+    if not isinstance(cert, list):
+        return None, value
+    if len(cert) != 4:
+        return None, value
+    if cert[:3] != [2, 1, 0]:
+        return None, value
+
+    pubkey = cert[3]
+    if not isinstance(pubkey, str):
+        return None, value
+
+    return [domain, "tls", pubkey], None
 
 def get_domain_records_sshfp(domain, value):
     # Must be array
@@ -960,10 +961,9 @@ def add_domain_record(base_domain, value, record):
         record_type = "txt"
         data = data[1]
 
-    # Handle TLS record specially to prepend protocol/port subdomain
+    # Handle TLS record specially to prepend wildcard subdomain
     if record_type == "tls":
-        protocol, port, data = data
-        domain = "_" + str(port) + "._" + protocol + "." + domain
+        domain = "*." + domain
 
     if not domain.endswith(base_domain):
         raise Exception("Base domain mismatch")
@@ -1131,9 +1131,8 @@ def add_domain_record_tls(value, data):
     if "tls" not in value:
         value["tls"] = []
 
-    # Minimize the DANE format
-    if "dane" in data:
-        data = data["dane"]
+    # Fill in hardcoded DANE params
+    data = [2, 1, 0, data]
 
     # Add the record
     value["tls"].append(data)

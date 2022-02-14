@@ -33,11 +33,12 @@ from PyQt5.QtWidgets import *
 from electrum.bitcoin import TYPE_ADDRESS
 from electrum.commands import NameAlreadyExistsError
 from electrum.i18n import _
-from electrum.names import format_name_identifier, identifier_to_namespace
+from electrum.names import format_name_identifier, format_name_identifier_split, identifier_to_namespace
 from electrum.network import TxBroadcastError, BestEffortRequestFailed
 from electrum.util import NotEnoughFunds, NoDynamicFeeEstimates
 from electrum.wallet import InternalAddressCorruption
 
+from .forms.configurenamedialog import Ui_ConfigureNameDialog
 from .paytoedit import PayToEdit
 from .configure_dns_dialog import show_configure_dns
 from .util import MessageBoxMixin
@@ -60,94 +61,67 @@ class ConfigureNameDialog(QDialog, MessageBoxMixin):
         self.main_window = parent
         self.wallet = self.main_window.wallet
 
-        self.setMinimumWidth(545)
-        self.setMinimumHeight(245)
+        self.ui = Ui_ConfigureNameDialog()
+        self.ui.setupUi(self)
+
+        self.identifier = identifier
+
         if is_new:
             self.setWindowTitle(_("Configure New Name"))
+
+            self.ui.labelSubmitHint.setText(_("Name registration will take approximately 2 to 4 hours."))
+
+            # TODO: handle non-ASCII encodings
+            self.accepted.connect(lambda: self.register_and_broadcast(self.identifier, self.ui.dataEdit.text().encode('ascii'), self.ui.transferTo))
         else:
             self.setWindowTitle(_("Reconfigure Name"))
 
-        form_layout = QFormLayout()
+            self.ui.labelSubmitHint.setText(_("Name update will take approximately 10 minutes to 2 hours."))
 
-        self.identifier = identifier
-        formatted_name = format_name_identifier(identifier)
-        form_layout.addRow(QLabel(formatted_name))
+            # TODO: handle non-ASCII encodings
+            self.accepted.connect(lambda: self.update_and_broadcast(self.identifier, self.ui.dataEdit.text().encode('ascii'), self.ui.transferTo))
 
-        self.dataEdit = QLineEdit()
+        formatted_name_split = format_name_identifier_split(self.identifier)
+        self.ui.labelNamespace.setText(formatted_name_split.category + ":")
+        self.ui.labelName.setText(formatted_name_split.specifics)
+
         self.set_value(value)
 
-        self.namespace = identifier_to_namespace(identifier)
+        self.namespace = identifier_to_namespace(self.identifier)
         self.namespace_is_dns = self.namespace in ["d", "dd"]
 
-        if self.namespace_is_dns:
-            self.dnsButton = QPushButton(_('DNS Editor...'))
-            self.dnsButton.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
-            self.dnsButton.setMinimumSize(150, 0)
-            # TODO: tooltip?
-            self.dnsButton.clicked.connect(lambda: show_configure_dns(self.dataEdit.text().encode('ascii'), self))
-
-        data_layout = QHBoxLayout()
-        data_layout.setContentsMargins(0, 0, 0, 0)
-        data_layout.addWidget(self.dataEdit)
-        if self.namespace_is_dns:
-            data_layout.addWidget(self.dnsButton)
-
-        self.data = QWidget()
-        self.data.setLayout(data_layout)
-
-        form_layout.addRow(_("Data:"), self.data)
-
-        self.transferTo = PayToEdit(self.main_window)
-        form_layout.addRow(_("Transfer to:"), self.transferTo)
-
-        form = QWidget()
-        form.setLayout(form_layout)
-
-        self.buttons_box = QDialogButtonBox()
-        self.buttons_box.setStandardButtons(QDialogButtonBox.Cancel|QDialogButtonBox.Ok)
-
-        buttons_hbox = QHBoxLayout()
-        buttons_hbox.addStretch()
-        buttons_hbox.addWidget(self.buttons_box)
-        buttons = QWidget()
-        buttons.setLayout(buttons_hbox)
-
-        vbox = QVBoxLayout()
-
-        vbox.addWidget(form)
-        vbox.addWidget(buttons)
-        self.setLayout(vbox)
-
-        self.buttons_box.accepted.connect(self.accept)
-        self.buttons_box.rejected.connect(self.reject)
-
-        if is_new:
-            self.accepted.connect(lambda: self.register_and_broadcast(self.identifier, self.dataEdit.text().encode('ascii'), self.transferTo))
-        else:
-            # TODO: handle non-ASCII encodings
-            self.accepted.connect(lambda: self.update_and_broadcast(self.identifier, self.dataEdit.text().encode('ascii'), self.transferTo))
+        self.ui.btnDNSEditor.setVisible(self.namespace_is_dns)
+        self.ui.btnDNSEditor.clicked.connect(lambda: show_configure_dns(self.ui.dataEdit.text().encode('ascii'), self))
 
     def set_value(self, value):
         # TODO: support non-ASCII encodings
-        self.dataEdit.setText(value.decode('ascii'))
+        self.ui.dataEdit.setText(value.decode('ascii'))
 
-    def register_and_broadcast(self, identifier, value, transfer_to):
+    def get_transfer_address(self, transfer_to):
         if transfer_to.toPlainText() == "":
             # User left the recipient blank, so this isn't a transfer.
-            recipient_address = None
+            return None
         else:
             # The user entered something into the recipient text box.
 
-            recipient = transfer_to.get_recipient()
+            recipient_outputs = transfer_to.get_outputs(False)
+            if recipient_outputs is None:
+                return False
+            if len(recipient_outputs) != 1:
+                self.main_window.show_error(_("You must enter one transfer address, or leave the transfer field empty."))
+                return False
 
-            if recipient is None:
-                recipient_type, recipient_address = None, transfer_to.toPlainText()
-            else:
-                recipient_type, recipient_address = recipient
-
-            if recipient_type != TYPE_ADDRESS:
+            recipient_address = recipient_outputs[0].address
+            if recipient_address is None:
                 self.main_window.show_error(_("Invalid address ") + recipient_address)
-                return
+                return False
+
+            return recipient_address
+
+    def register_and_broadcast(self, identifier, value, transfer_to):
+        recipient_address = self.get_transfer_address(transfer_to)
+        if recipient_address == False:
+            return
 
         name_register = self.main_window.console.namespace.get('name_register')
         broadcast = self.main_window.console.namespace.get('broadcast')
@@ -181,22 +155,9 @@ class ConfigureNameDialog(QDialog, MessageBoxMixin):
             return
 
     def update_and_broadcast(self, identifier, value, transfer_to):
-        if transfer_to.toPlainText() == "":
-            # User left the recipient blank, so this isn't a transfer.
-            recipient_address = None
-        else:
-            # The user entered something into the recipient text box.
-
-            recipient = transfer_to.get_recipient()
-
-            if recipient is None:
-                recipient_type, recipient_address = None, transfer_to.toPlainText()
-            else:
-                recipient_type, recipient_address = recipient
-
-            if recipient_type != TYPE_ADDRESS:
-                self.main_window.show_error(_("Invalid address ") + recipient_address)
-                return
+        recipient_address = self.get_transfer_address(transfer_to)
+        if recipient_address == False:
+            return
 
         name_update = self.main_window.console.namespace.get('name_update')
         broadcast = self.main_window.console.namespace.get('broadcast')
