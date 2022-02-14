@@ -2122,6 +2122,12 @@ class Abstract_Wallet(AddressSynchronizer, ABC):
         # read.  Since we want to use it multiple times for Namecoin, the most
         # obvious workaround is to simply make copies of it before we cast it
         # into a map.
+        try:
+            # map cannot be deepcopied without triggering pickle errors;
+            # convert it to a list.
+            domain_addr = list(domain_addr)
+        except TypeError:
+            pass
         name_txid_domain = copy.deepcopy(domain_addr)
         name_identifier_domain = copy.deepcopy(domain_addr)
 

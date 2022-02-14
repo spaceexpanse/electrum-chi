@@ -435,7 +435,7 @@ function assert_core_nx()
 {
     nx_name=$1
 
-    assert_raises_error "$bitcoin_cli name_show $nx_name" "name not found" || assert_core_expired "$nx_name"
+    assert_raises_error "$bitcoin_cli name_show $nx_name" "name never existed" || assert_core_expired "$nx_name"
 }
 
 function assert_electrum_nx()
