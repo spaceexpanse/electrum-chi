@@ -45,7 +45,7 @@ from . import bitcoin
 from .bitcoin import is_address,  hash_160, COIN
 from .bip32 import BIP32Node
 from .i18n import _
-from .names import build_name_commitment, build_name_new, format_name_identifier, name_expiration_datetime_estimate, name_identifier_to_scripthash, name_suspends_in, OP_NAME_NEW, OP_NAME_FIRSTUPDATE, OP_NAME_UPDATE, validate_value_length
+from .names import build_name_commitment, build_name_new, format_name_identifier, name_expiration_datetime_estimate, name_identifier_to_scripthash, name_semi_expires_in, OP_NAME_NEW, OP_NAME_FIRSTUPDATE, OP_NAME_UPDATE, validate_value_length
 from .verifier import verify_tx_is_in_block
 from .transaction import (Transaction, multisig_script, TxOutput, PartialTransaction, PartialTxOutput,
                           tx_from_any, PartialTxInput, TxOutpoint)
@@ -90,7 +90,7 @@ class NameUnconfirmedError(NameNotFoundError):
 class NameExpiredError(NameNotFoundError):
     pass
 
-class NameSuspendedError(NameNotResolvableError):
+class NameSemiExpiredError(NameNotResolvableError):
     pass
 
 class NameNeverExistedError(NameNotFoundError):
@@ -429,8 +429,8 @@ class Commands:
             expires_in, expires_time = name_expiration_datetime_estimate(height, self.network.blockchain())
             expired = expires_in <= 0 if expires_in is not None else None
 
-            suspends_in, suspends_time = name_expiration_datetime_estimate(height, self.network.blockchain(), blocks_func=name_suspends_in)
-            suspended = suspends_in <= 0 if suspends_in is not None else None
+            semi_expires_in, semi_expires_time = name_expiration_datetime_estimate(height, self.network.blockchain(), blocks_func=name_semi_expires_in)
+            semi_expired = semi_expires_in <= 0 if semi_expires_in is not None else None
 
             is_mine = wallet.is_mine(address)
 
@@ -446,9 +446,9 @@ class Commands:
                 "expires_in": expires_in,
                 "expires_time": round(expires_time.timestamp()),
                 "expired": expired,
-                "suspends_in": suspends_in,
-                "suspends_time": round(suspends_time.timestamp()),
-                "suspended": suspended,
+                "semi_expires_in": semi_expires_in,
+                "semi_expires_time": round(semi_expires_time.timestamp()),
+                "semi_expired": semi_expired,
                 "ismine": is_mine,
             }
             result.append(result_item)
@@ -766,7 +766,7 @@ class Commands:
                 show = await self.name_show(identifier)
             except NameNotFoundError:
                 name_exists = False
-            except NameSuspendedError:
+            except NameSemiExpiredError:
                 pass
             if name_exists:
                 raise NameAlreadyExistsError("The name is already registered")
@@ -1416,15 +1416,15 @@ class Commands:
         # 18 server confirmations but under 12 local confirmations, then we're
         # probably still syncing, and we error.
         unexpired_height = max_chain_height - constants.net.NAME_EXPIRATION + 1
-        unsuspended_height = max_chain_height - constants.net.NAME_SUSPENSION + 1
+        un_semi_expired_height = max_chain_height - constants.net.NAME_SEMI_EXPIRATION + 1
         unverified_height = local_chain_height - 12 + 1
         unmined_height = max_chain_height - 18 + 1
 
         tx_best = None
         expired_tx_exists = False
         expired_tx_height = None
-        suspended_tx_exists = False
-        suspended_tx_height = None
+        semi_expired_tx_exists = False
+        semi_expired_tx_height = None
         unmined_tx_exists = False
         unmined_tx_height = None
         for tx_candidate in txs[::-1]:
@@ -1437,14 +1437,14 @@ class Commands:
                 if expired_tx_height is None:
                     expired_tx_height = tx_candidate["height"]
                 continue
-            if tx_candidate["height"] < unsuspended_height:
-                # Transaction is suspended.  Skip.
-                suspended_tx_exists = True
-                # We want to log the *latest* suspended height.  We're iterating
+            if tx_candidate["height"] < un_semi_expired_height:
+                # Transaction is semi-expired.  Skip.
+                semi_expired_tx_exists = True
+                # We want to log the *latest* semi-expired height.  We're iterating
                 # in reverse chronological order, so we only take the first one
                 # we see.
-                if suspended_tx_height is None:
-                    suspended_tx_height = tx_candidate["height"]
+                if semi_expired_tx_height is None:
+                    semi_expired_tx_height = tx_candidate["height"]
                 continue
             if tx_candidate["height"] > unverified_height:
                 # Transaction doesn't have enough verified depth.  What we do
@@ -1470,8 +1470,8 @@ class Commands:
 
         if unmined_tx_exists:
             raise NameUnconfirmedError('Name is purportedly unconfirmed (registration height {}, latest verified height {})'.format(unmined_tx_height, unverified_height))
-        if suspended_tx_exists:
-            raise NameSuspendedError("Name is purportedly suspended (latest renewal height {}, latest unsuspended height {})".format(suspended_tx_height, unsuspended_height))
+        if semi_expired_tx_exists:
+            raise NameSemiExpiredError("Name is purportedly semi-expired (latest renewal height {}, latest un-semi-expired height {}); if this name is yours, renew it ASAP to restore resolution and avoid losing ownership of the name".format(semi_expired_tx_height, un_semi_expired_height))
         if expired_tx_exists:
             raise NameExpiredError("Name is purportedly expired (latest renewal height {}, latest unexpired height {})".format(expired_tx_height, unexpired_height))
         if tx_best is None:
@@ -1533,7 +1533,7 @@ class Commands:
 
                     expires_in, expires_time = name_expiration_datetime_estimate(height, self.network.blockchain())
 
-                    suspends_in, suspends_time = name_expiration_datetime_estimate(height, self.network.blockchain(), blocks_func=name_suspends_in)
+                    semi_expires_in, semi_expires_time = name_expiration_datetime_estimate(height, self.network.blockchain(), blocks_func=name_semi_expires_in)
 
                     is_mine = None
                     if wallet:
@@ -1551,9 +1551,9 @@ class Commands:
                         "expires_in": expires_in,
                         "expires_time": round(expires_time.timestamp()),
                         "expired": False,
-                        "suspends_in": suspends_in,
-                        "suspends_time": round(suspends_time.timestamp()),
-                        "suspended": False,
+                        "semi_expires_in": semi_expires_in,
+                        "semi_expires_time": round(semi_expires_time.timestamp()),
+                        "semi_expired": False,
                         "ismine": is_mine,
                     }
 
