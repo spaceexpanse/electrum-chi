@@ -90,7 +90,7 @@ class NameUnconfirmedError(NameNotFoundError):
 class NameExpiredError(NameNotFoundError):
     pass
 
-class NameSuspendedError(NameNotResolvableError):
+class NameSemiExpiredError(NameNotResolvableError):
     pass
 
 class NameNeverExistedError(NameNotFoundError):
@@ -739,7 +739,7 @@ class Commands:
                 show = await self.name_show(identifier)
             except NameNotFoundError:
                 name_exists = False
-            except NameSuspendedError:
+            except NameSemiExpiredError:
                 pass
             if name_exists:
                 raise NameAlreadyExistsError("The name is already registered")
@@ -1212,8 +1212,8 @@ class Commands:
         tx_best = None
         expired_tx_exists = False
         expired_tx_height = None
-        suspended_tx_exists = False
-        suspended_tx_height = None
+        semi_expired_tx_exists = False
+        semi_expired_tx_height = None
         unmined_tx_exists = False
         unmined_tx_height = None
         for tx_candidate in txs[::-1]:
@@ -1222,8 +1222,8 @@ class Commands:
 
         if unmined_tx_exists:
             raise NameUnconfirmedError('Name is purportedly unconfirmed (registration height {}, latest verified height {})'.format(unmined_tx_height, unverified_height))
-        if suspended_tx_exists:
-            raise NameSuspendedError("Name is purportedly suspended (latest renewal height {}, latest unsuspended height {})".format(suspended_tx_height, unsuspended_height))
+        if semi_expired_tx_exists:
+            raise NameSemiExpiredError("Name is purportedly semi-expired (latest renewal height {}, latest un-semi-expired height {}); if this name is yours, renew it ASAP to restore resolution and avoid losing ownership of the name".format(semi_expired_tx_height, un_semi_expired_height))
         if expired_tx_exists:
             raise NameExpiredError("Name is purportedly expired (latest renewal height {}, latest unexpired height {})".format(expired_tx_height, unexpired_height))
         if tx_best is None:
