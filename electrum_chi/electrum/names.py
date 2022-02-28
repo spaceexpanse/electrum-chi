@@ -266,10 +266,6 @@ def name_op_to_json(name_op: Dict) -> Dict[str, str]:
 
     result["op"] = op_str[result["op"]]
 
-    if "hash" in result:
-        result["hash"] = result["hash"].hex()
-    if "rand" in result:
-        result["rand"] = result["rand"].hex()
     if "name" in result:
         result["name"] = result["name"].hex()
         result["name_encoding"] = "hex"

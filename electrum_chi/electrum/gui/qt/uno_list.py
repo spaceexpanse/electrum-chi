@@ -91,7 +91,7 @@ class UNOList(UTXOList):
         else:
             if height is not None and height > 0:
                 # utxo is confirmed
-                status = ''
+                status = _('Confirmed')
             else:
                 # utxo is name_update
                 status = _('Update Pending')
