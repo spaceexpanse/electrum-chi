@@ -1,4 +1,4 @@
-Electrum-CHI - Lightweight Xaya client
+Electrum-CHI - Lightweight Xaya client 
 =====================================
 
 ::
